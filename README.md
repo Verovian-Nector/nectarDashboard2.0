@@ -60,8 +60,8 @@ Built with:
 | Auth | JWT, OAuth2PasswordRequestForm |
 | Hashing | `passlib` + `bcrypt` |
 | Validation | Pydantic v2 + `pydantic-settings` |
-| Deployment | ngrok (dev), Render/Railway (prod) |
-| Frontend | FlutterFlow (mobile) |
+| Deployment | ngrok (dev), AWS (prod) |
+| Frontend |  |
 
 ---
 
@@ -71,3 +71,4 @@ Built with:
 ```bash
 git clone https://your-repo-url/nectarapp.git
 cd nectarapp
+
