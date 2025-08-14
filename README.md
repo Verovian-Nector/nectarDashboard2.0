@@ -6,11 +6,11 @@ A secure, FastAPI-based backend for managing property data, users, and inspectio
 
 ## 🚀 Overview
 
-NECTAR is a modern, async Python backend that powers a real estate/property management mobile app. It provides:
+NECTAR is a modern, async Python backend that powers a real estate/property management dashboard app. It provides:
 - JWT-based authentication
 - Role-based access control
 - Full CRUD for properties and users
-- Nested JSON fields for tenant, financial, and inspection data
+- Nested JSON fields for tenant/property information, financial, and inspection data
 - Seamless integration with **FlutterFlow**
 - Compatibility with **WordPress user accounts**
 
@@ -28,7 +28,7 @@ Built with:
 
 ✅ **User Management**
 - Login with WordPress credentials (after migration)
-- Role-based: `propertyadmin`, `propertymanager`, `editor`
+- Role-based: `propertyadmin`, `propertymanager`, `blog`
 - Password reset flow
 
 ✅ **Property Management**
@@ -71,6 +71,7 @@ Built with:
 ```bash
 git clone https://your-repo-url/nectarapp.git
 cd nectarapp
+
 
 
 
