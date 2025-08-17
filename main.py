@@ -9,12 +9,32 @@ import datetime
 
 # ✅ Correct imports
 from database import engine, get_db, Base, DBUser, DBProperty
-from schemas import UserCreate, UserResponse, PropertyCreate, PropertyResponse, PropertyUpdate, Token, PropertyInspectionUpdate
-from crud import get_user, create_user, get_properties, create_property, update_property, update_property_inspection
-from auth import authenticate_user, create_access_token, get_current_user, get_password_hash  # ✅ Add get_password_hash here
+from schemas import UserCreate, UserResponse, PropertyCreate, PropertyResponse, PropertyUpdate, Token, UserPermissions
+from crud import get_user, create_user, get_properties, create_property, update_property
+from auth import authenticate_user, create_access_token, get_current_user
+from dependencies import require_permission  # ✅ Add this
+from security import get_password_hash
 
 app = FastAPI()
 
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to the Property Management API",
+        "endpoints": {
+            "auth": "/token",
+            "users": "/users",
+            "properties": "/properties"
+        }
+    }
+
+
+@app.get("/check-user/{username}")
+async def check_user(username: str, db: AsyncSession = Depends(get_db)):
+    user = await get_user(db, username)
+    return {"exists": user is not None}
+    
+    
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -31,7 +51,7 @@ async def startup():
 
 # ==================== AUTH ENDPOINTS ====================
 
-@app.post( "/token", response_model=Token)
+@app.post("/token", response_model=Token)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
@@ -50,6 +70,7 @@ async def login(
 @app.post("/users", response_model=UserResponse)
 async def create_user_endpoint(
     user: UserCreate,
+    current_user: DBUser = Depends(require_permission("users", "create")),
     db: AsyncSession = Depends(get_db)
 ):
     existing_user = await get_user(db, user.username)
@@ -67,13 +88,28 @@ async def create_user_endpoint(
     await db.refresh(db_user)
     return db_user
 
+@app.put("/users/{user_id}/permissions", response_model=UserResponse)
+async def update_user_permissions(
+    user_id: int,
+    permissions: UserPermissions,
+    current_user: DBUser = Depends(require_permission("users", "update")),
+    db: AsyncSession = Depends(get_db)
+):
+    db_user = await db.get(DBUser, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db_user.permissions = permissions.model_dump()
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
 
 # ==================== PROPERTY ENDPOINTS ====================
 
 @app.get("/properties", response_model=List[PropertyResponse])
 async def read_properties(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, le=1000),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: DBUser = Depends(require_permission("properties", "read")),
     db: AsyncSession = Depends(get_db)
 ):
     return await get_properties(db, skip=skip, limit=limit)
@@ -82,7 +118,7 @@ async def read_properties(
 @app.post("/properties", response_model=PropertyResponse)
 async def create_new_property(
     property: PropertyCreate,
-    current_user: DBUser = Depends(get_current_user),
+    current_user: DBUser = Depends(require_permission("properties", "create")),
     db: AsyncSession = Depends(get_db)
 ):
     return await create_property(db, property)
@@ -92,7 +128,7 @@ async def create_new_property(
 
 @app.get("/users", response_model=List[UserResponse])
 async def read_users(
-    roles: str = Query("propertyManager,propertyowner,propertyadmin"),
+    roles: str = "propertyManager,propertyowner,propertyadmin",
     current_user: DBUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -112,7 +148,7 @@ async def read_users(
 async def update_existing_property(
     property_id: int,
     property_update: PropertyUpdate,
-    current_user: DBUser = Depends(get_current_user),
+    current_user: DBUser = Depends(require_permission("properties", "update")),
     db: AsyncSession = Depends(get_db)
 ):
     db_property = await db.get(DBProperty, property_id)
@@ -125,23 +161,3 @@ async def update_existing_property(
     await db.commit()
     await db.refresh(db_property)
     return db_property
-
-
-@app.put("/properties/{property_id}/inspection", response_model=PropertyResponse)
-async def update_property_inspection_endpoint(
-    property_id: int,
-    inspection_update: PropertyInspectionUpdate,
-    current_user: DBUser = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    property = await db.get(DBProperty, property_id)
-    if not property:
-        raise HTTPException(status_code=404, detail="Property not found")
-    if property.owner_id != current_user.id and current_user.role != "propertyadmin":
-        raise HTTPException(status_code=403, detail="Not authorized to update this property")
-    if property.inspections is None:
-        property.inspections = []
-    property.inspections.append({**inspection_update.model_dump(), "updated_at": datetime.datetime.utcnow().isoformat()})
-    await db.commit()
-    await db.refresh(property)
-    return property

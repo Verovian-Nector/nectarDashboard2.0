@@ -1,7 +1,6 @@
 # auth.py
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,21 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from crud import get_user
 from config import settings
+from security import verify_password  # ← From new file
+from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-
-def verify_password(plain_password: str, hashed_password: str):
-    try:
-        return pwd_context.verify(plain_password, hashed_password)
-    except ValueError:
-        # Handle invalid hash format (e.g., $wp$, $P$)
-        return False
-
-
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
 
 
 async def authenticate_user(db: AsyncSession, username: str, password: str):

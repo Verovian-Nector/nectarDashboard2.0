@@ -1,5 +1,5 @@
 # crud.py
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import DBUser, DBProperty
 from schemas import UserCreate, PropertyCreate
@@ -27,35 +27,44 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
     return result.scalars().all()
 
 async def create_property(db: AsyncSession, property: PropertyCreate):
+    print("🔧 Creating property in DB...")
+    print("📥 Data:", property.model_dump())
+    
     db_property = DBProperty(**property.model_dump())
     db.add(db_property)
     await db.commit()
     await db.refresh(db_property)
+    
+    print(f"✅ Saved to DB! ID={db_property.id}")
     return db_property
-
-async def update_property(db: AsyncSession, property_id: int, updates: dict):
-    await db.execute(
-        update(DBProperty)
-        .where(DBProperty.id == property_id)
-        .values(**updates)
-    )
-    await db.commit()
-    return await get_property(db, property_id)
 
 async def get_property(db: AsyncSession, property_id: int):
     return await db.get(DBProperty, property_id)
 
-async def update_property_inspection(
-    db: AsyncSession,
-    property_id: int,
-    inspection_data: Dict[str, Any]
-):
-    property = await get_property(db, property_id)
-    if not property:
+async def update_property(db: AsyncSession, property_id: int, updates: dict):
+    db_property = await db.get(DBProperty, property_id)
+    if not db_property:
         return None
-    if property.inspections is None:
-        property.inspections = []
-    property.inspections.append({**inspection_data, "updated_at": datetime.datetime.utcnow().isoformat()})
+
+    # Handle acf merge
+    if "acf" in updates:
+        if db_property.acf is None:
+            db_property.acf = {}
+        for group, data in updates["acf"].items():
+            if group not in db_property.acf:
+                db_property.acf[group] = {}
+            if isinstance(data, dict):
+                db_property.acf[group].update(data)
+            else:
+                db_property.acf[group] = data
+
+    # Update top-level fields
+    for key, value in updates.items():
+        if key != "acf":
+            setattr(db_property, key, value)
+
+    db_property.updated_at = datetime.datetime.utcnow()
+
     await db.commit()
-    await db.refresh(property)
-    return property
+    await db.refresh(db_property)
+    return db_property
