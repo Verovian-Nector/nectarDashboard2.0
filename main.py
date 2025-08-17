@@ -96,6 +96,13 @@ async def update_user_permissions(
     await db.commit()
     await db.refresh(db_user)
     return db_user
+    
+@app.get("/users/me", response_model=UserResponse)
+async def read_current_user(
+    current_user: UserResponse = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return current_user
 
 # ==================== PROPERTY ENDPOINTS ====================
 
