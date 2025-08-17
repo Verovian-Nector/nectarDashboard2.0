@@ -56,12 +56,12 @@ class ContentField(BaseModel):
     protected: bool
 
 
+# schemas.py
 class PropertyCreate(BaseModel):
-    status: Optional[str] = None
-    title: TitleField
-    content: Optional[ContentField] = None
-    categories: List[int] = []
-    acf: Optional[Dict[str, Any]] = None  # Will include profilegroup, gallery_photos, etc.
+    title: str
+    address: str
+    owner_id: int
+    acf: Optional[Dict[str, Any]] = None
 
     class Config:
         from_attributes = True
