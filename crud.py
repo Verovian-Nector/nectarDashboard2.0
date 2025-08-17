@@ -8,7 +8,7 @@ import datetime
 import asyncio  # ✅ Add this
 
 # ✅ Import the wrapper function
-from .sync_to_wordpress import on_property_created
+from sync_to_wordpress import on_property_created
 
 
 async def get_user(db: AsyncSession, username: str):
