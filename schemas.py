@@ -61,7 +61,7 @@ class PropertyCreate(BaseModel):
     title: TitleField
     content: Optional[ContentField] = None
     categories: List[int] = []
-    acf: Dict[str, Any]  # Will include profilegroup, gallery_photos, etc.
+    acf: Optional[Dict[str, Any]] = None  # Will include profilegroup, gallery_photos, etc.
 
     class Config:
         from_attributes = True
