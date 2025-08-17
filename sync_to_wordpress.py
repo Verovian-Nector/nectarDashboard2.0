@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # ==================== Configuration ====================
-WORDPRESS_SITE_URL = "https://nectarestates.com"  # ✅ Removed trailing spaces
+WORDPRESS_SITE_URL = "https://nectarestates.com"  # ✅ No spaces
 WP_API_ENDPOINT = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/properties"  # ✅ 'properties' (plural), not 'property'
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
@@ -123,6 +123,8 @@ async def sync_user_to_wordpress(user_data: Dict[str, Any]):
 # ==================== Usage in FastAPI ====================
 # Call this from your CRUD functions
 async def on_property_created(property_db_obj):
+    print(f"🔄 Syncing property to WordPress: {property_db_obj.title}")
+    logger.info(f"🔄 Starting sync for: {property_db_obj.title}")
     """
     Call this after creating a property in FastAPI
     """
