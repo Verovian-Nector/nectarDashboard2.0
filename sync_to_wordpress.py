@@ -7,10 +7,13 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # ==================== Configuration ====================
-WORDPRESS_SITE_URL = "https://nectarestates.com"
-WP_API_ENDPOINT = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/property"
+WORDPRESS_SITE_URL = "https://nectarestates.com"  # ✅ Removed trailing spaces
+WP_API_ENDPOINT = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/properties"  # ✅ 'properties' (plural), not 'property'
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
+
+if not WP_USERNAME or not WP_APP_PASSWORD:
+    raise ValueError("WP_USERNAME and WP_APP_PASSWORD must be set in environment")
 
 # Optional: Map FastAPI roles to WordPress roles
 ROLE_TO_WP_CAPABILITY = {
@@ -35,7 +38,7 @@ async def sync_property_to_wordpress(
     action: str = "create"  # "create" or "update"
 ) -> Optional[Dict[str, Any]]:
     """
-    Sync a property to WordPress as a custom post type 'property'
+    Sync a property to WordPress as a custom post type 'properties'
     """
     # Prepare payload
     payload = {
@@ -62,7 +65,10 @@ async def sync_property_to_wordpress(
                 url=url,
                 auth=auth,
                 json=payload,
-                headers={"User-Agent": "NectarApp-Sync/1.0"}
+                headers={
+                    "User-Agent": "NectarApp-Sync/1.0",
+                    "Content-Type": "application/json"
+                }
             )
 
             if response.status_code in [200, 201]:

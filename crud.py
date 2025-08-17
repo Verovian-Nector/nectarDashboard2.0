@@ -35,7 +35,8 @@ async def create_property(db: AsyncSession, property: PropertyCreate):
     await db.commit()
     await db.refresh(db_property)
     
-    print(f"✅ Saved to DB! ID={db_property.id}")
+    # ✅ Sync to WordPress with full ACF structure
+    asyncio.create_task(sync_property_to_wordpress(db_property))
     return db_property
 
 async def get_property(db: AsyncSession, property_id: int):
