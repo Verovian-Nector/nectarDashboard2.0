@@ -27,12 +27,6 @@ async def root():
             "properties": "/properties"
         }
     }
-
-
-@app.get("/check-user/{username}")
-async def check_user(username: str, db: AsyncSession = Depends(get_db)):
-    user = await get_user(db, username)
-    return {"exists": user is not None}
     
     
 # CORS
