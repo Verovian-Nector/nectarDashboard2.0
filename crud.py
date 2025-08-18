@@ -1,5 +1,6 @@
 # crud.py
 from sqlalchemy import select, delete
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import DBUser, DBProperty, Event, Payment, Inventory, Room, Item, DefaultRoom, DefaultItem
 from schemas import UserCreate, PropertyCreate, EventCreate, PaymentCreate, InventoryCreate
@@ -30,9 +31,17 @@ async def create_user(db: AsyncSession, user: UserCreate):
     return db_user
 
 
-async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
-    result = await db.execute(select(DBProperty).offset(skip).limit(limit))
-    return result.scalars().all()
+async def get_property(db: AsyncSession, property_id: int):
+    result = await db.execute(
+        select(DBProperty)
+        .options(
+            selectinload(DBProperty.inventory)
+            .selectinload(Inventory.rooms)
+            .selectinload(Room.items)
+        )
+        .where(DBProperty.id == property_id)
+    )
+    return result.scalar()
 
 
 async def create_property(db: AsyncSession, property: PropertyCreate):
