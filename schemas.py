@@ -370,3 +370,44 @@ class PaymentResponse(PaymentBase):
 
     class Config:
         from_attributes = True
+        
+        
+# --- DefaultRoom Schemas ---
+class DefaultRoomBase(BaseModel):
+    room_name: str
+    order: int = 0
+
+
+class DefaultRoomCreate(DefaultRoomBase):
+    pass
+
+
+class DefaultRoomResponse(DefaultRoomBase):
+    id: int
+
+    class Config:
+        from_attributes = True  # Replaces `orm_mode = True` in Pydantic v2
+
+
+# --- DefaultItem Schemas ---
+class DefaultItemBase(BaseModel):
+    room_name: str
+    name: str
+    brand: Optional[str] = None
+    value: Optional[float] = None
+    condition: Optional[str] = None
+    owner: Optional[str] = None
+    notes: Optional[str] = None
+    photos: Optional[List[str]] = None  # List of image URLs
+    order: int = 0
+
+
+class DefaultItemCreate(DefaultItemBase):
+    pass
+
+
+class DefaultItemResponse(DefaultItemBase):
+    id: int
+
+    class Config:
+        from_attributes = True

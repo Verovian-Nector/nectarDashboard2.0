@@ -18,6 +18,7 @@ from datetime import datetime
 from schemas import (
     UserCreate,
     UserResponse,
+    UserPermissions,
     PropertyCreate,
     PropertyResponse,
     PropertyUpdate,
@@ -32,6 +33,10 @@ from schemas import (
     ItemResponse,
     RoomCreate,
     RoomResponse,
+    DefaultRoomResponse,
+    DefaultRoomCreate,
+    DefaultItemResponse,
+    DefaultItemCreate,
 )
 
 from database import engine, get_db, Base, DBUser, DBProperty
@@ -47,6 +52,7 @@ from crud import (
     get_payments,
     create_inventory_with_rooms,
     get_inventory,
+    update_inventory_with_rooms,
 )
 
 from auth import authenticate_user, create_access_token, get_current_user
@@ -160,7 +166,7 @@ async def create_new_property(
     current_user: DBUser = Depends(require_permission("properties", "create")),
     db: AsyncSession = Depends(get_db)
 ):
-    return await crud.create_property(db, property)
+    return await create_property(db, property)
 
 
 # ==================== USER MANAGEMENT ====================
@@ -260,7 +266,7 @@ async def update_inventory_endpoint(
     current_user: DBUser = Depends(require_permission("inventory", "update")),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await crud.update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
+    result = await update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
     return result
     
     
