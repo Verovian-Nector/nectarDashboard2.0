@@ -1,5 +1,5 @@
 # crud.py
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import DBUser, DBProperty, Event, Payment, Inventory, Room, Item
 from schemas import UserCreate, PropertyCreate, EventCreate, PaymentCreate, InventoryCreate
@@ -157,6 +157,61 @@ async def create_inventory_with_rooms(db: AsyncSession, inventory_data: dict):
 
         for item_data in room_data.get("items", []):
             item = Item(room_id=room.id, **item_data)
+            db.add(item)
+
+    await db.commit()
+    return inventory
+    
+    
+async def update_inventory_with_rooms(db: AsyncSession, inventory_id: int, inventory_data: dict):
+    """
+    Update inventory by deleting old rooms/items and recreating from new data
+    """
+    # Get existing inventory
+    result = await db.execute(
+        select(Inventory).where(Inventory.id == inventory_id)
+    )
+    inventory = result.scalar()
+    if not inventory:
+        return None
+
+    # Update inventory basic data
+    inventory.property_name = inventory_data.get("property_name", inventory.property_name)
+    await db.commit()
+
+    # Delete all rooms and items (cascade would handle this, but explicit for clarity)
+    await db.execute(
+        delete(Item).where(Item.room_id.in_(
+            select(Room.id).where(Room.inventory_id == inventory_id)
+        ))
+    )
+    await db.execute(
+        delete(Room).where(Room.inventory_id == inventory_id)
+    )
+    await db.commit()
+
+    # Recreate rooms and items
+    for room_data in inventory_data.get("rooms", []):
+        room = Room(
+            room_name=room_data["room_name"],
+            inventory_id=inventory.id
+        )
+        db.add(room)
+        await db.commit()
+        await db.refresh(room)
+
+        for item_data in room_data.get("items", []):
+            item = Item(
+                room_id=room.id,
+                name=item_data["name"],
+                brand=item_data.get("brand"),
+                purchase_date=item_data.get("purchase_date"),
+                value=item_data.get("value"),
+                condition=item_data.get("condition"),
+                owner=item_data.get("owner"),
+                notes=item_data.get("notes"),
+                photos=item_data.get("photos", [])
+            )
             db.add(item)
 
     await db.commit()
