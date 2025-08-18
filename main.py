@@ -15,7 +15,6 @@ from sqlalchemy import select
 from typing import List
 from datetime import datetime
 
-# ✅ Add these imports
 from schemas import (
     UserCreate,
     UserResponse,
@@ -47,20 +46,7 @@ from crud import (
     create_inventory_with_rooms,
     get_inventory,
 )
-from database import engine, get_db, Base, DBUser, DBProperty
-from crud import (
-    get_user,
-    create_user,
-    get_properties,
-    create_property,
-    update_property,
-    create_event,
-    get_events,
-    create_payment,
-    get_payments,
-    create_inventory_with_rooms,
-    get_inventory,
-)
+
 from auth import authenticate_user, create_access_token, get_current_user, require_permission
 from dependencies import require_permission  # ✅ Add this
 from security import get_password_hash
@@ -172,7 +158,7 @@ async def create_new_property(
     current_user: DBUser = Depends(require_permission("properties", "create")),
     db: AsyncSession = Depends(get_db)
 ):
-    return await create_property(db, property)
+    return await crud.create_property(db, property)
 
 
 # ==================== USER MANAGEMENT ====================
