@@ -7,11 +7,61 @@ from sqlalchemy import select
 from typing import List
 from datetime import datetime
 
-# ✅ Correct imports
+from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import List
+from datetime import datetime
+
+# ✅ Add these imports
+from schemas import (
+    UserCreate,
+    UserResponse,
+    PropertyCreate,
+    PropertyResponse,
+    EventCreate,
+    EventResponse,
+    PaymentCreate,
+    PaymentResponse,
+    InventoryCreate,
+    InventoryResponse,
+    ItemCreate,
+    ItemResponse,
+    RoomCreate,
+    RoomResponse,
+)
+
 from database import engine, get_db, Base, DBUser, DBProperty
-from schemas import UserCreate, UserResponse, PropertyCreate, PropertyResponse, PropertyUpdate, Token, UserPermissions
-from crud import get_user, create_user, get_properties, create_property, update_property
-from auth import authenticate_user, create_access_token, get_current_user
+from crud import (
+    get_user,
+    create_user,
+    get_properties,
+    create_property,
+    update_property,
+    create_event,
+    get_events,
+    create_payment,
+    get_payments,
+    create_inventory_with_rooms,
+    get_inventory,
+)
+from database import engine, get_db, Base, DBUser, DBProperty
+from crud import (
+    get_user,
+    create_user,
+    get_properties,
+    create_property,
+    update_property,
+    create_event,
+    get_events,
+    create_payment,
+    get_payments,
+    create_inventory_with_rooms,
+    get_inventory,
+)
+from auth import authenticate_user, create_access_token, get_current_user, require_permission
 from dependencies import require_permission  # ✅ Add this
 from security import get_password_hash
 
