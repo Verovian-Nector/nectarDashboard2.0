@@ -26,7 +26,7 @@ class DBUser(Base):
     hashed_password = Column(String, nullable=False)
     role = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     permissions = Column(JSON)  # Stores full CRUD permissions object
     properties = relationship("DBProperty", back_populates="owner", cascade="all, delete-orphan")
 
@@ -51,8 +51,8 @@ class DBProperty(Base):
     # NEW: Store full ACF object
     acf = Column(JSON)  # Will hold inspection_group, financial_group, etc.
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=datetime.datetime.utcnow)
     
     # Relationships
     events = relationship("Event", back_populates="property", cascade="all, delete-orphan")
