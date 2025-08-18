@@ -52,7 +52,7 @@ class DBProperty(Base):
     acf = Column(JSON)  # Will hold inspection_group, financial_group, etc.
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     events = relationship("Event", back_populates="property", cascade="all, delete-orphan")
