@@ -47,7 +47,7 @@ from crud import (
     get_inventory,
 )
 
-from auth import authenticate_user, create_access_token, get_current_user, require_permission
+from auth import authenticate_user, create_access_token, get_current_user
 from dependencies import require_permission  # ✅ Add this
 from security import get_password_hash
 
