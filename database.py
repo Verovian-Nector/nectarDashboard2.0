@@ -154,8 +154,15 @@ class Item(Base):
     owner = Column(String, nullable=True)
     notes = Column(String, nullable=True)
     photos = Column(JSON, nullable=True)  # Store list of URLs
-    created = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc)
+    )
+    updated = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
 
     # Relationship
     room = relationship("Room", back_populates="items")
