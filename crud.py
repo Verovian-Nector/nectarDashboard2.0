@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import DBUser, DBProperty
 from schemas import UserCreate, PropertyCreate
 from typing import Dict, Any
-import datetime
+from datetime import datetime
 import asyncio  # ✅ Add this
 
 # ✅ Import the wrapper function

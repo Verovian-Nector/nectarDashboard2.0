@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from config import settings
-import datetime
+from datetime import datetime, timezone
 
 # Async engine
 engine = create_async_engine(settings.DATABASE_URL, echo=True)
@@ -69,8 +69,8 @@ class Event(Base):
     event_name = Column(String, nullable=False)
     event_details = Column(String, nullable=True)
     lease_date = Column(DateTime, nullable=True)
-    incoming = Column(String, nullable=True)
-    outgoing = Column(String, nullable=True)
+    incoming = Column(DateTime, nullable=True)
+    outgoing = Column(DateTime, nullable=True)
     tenant = Column(String, nullable=True)
     incoming_color = Column(String, nullable=True)
     outgoing_color = Column(String, nullable=True)
@@ -82,7 +82,7 @@ class Event(Base):
     status = Column(String, nullable=True)
     incoming_status = Column(String, nullable=True)
     outgoing_status = Column(String, nullable=True)
-    checkout = Column(Boolean, default=False)
+    checkout = Column(DateTime, nullable=True)
     property_type = Column(String, nullable=True)
     payment_date = Column(DateTime, nullable=True)
 
@@ -95,7 +95,7 @@ class Payment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     property_id = Column(Integer, ForeignKey("properties.id"), nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))  # ✅ Fixed
     amount = Column(Float, nullable=False)
     category = Column(String, nullable=True)
     property_type = Column(String, nullable=True)
@@ -104,7 +104,6 @@ class Payment(Base):
     due_date = Column(DateTime, nullable=True)
     tenant = Column(String, nullable=True)
 
-    # Relationship
     property = relationship("DBProperty", back_populates="payments")
 
 
@@ -145,8 +144,8 @@ class Item(Base):
     owner = Column(String, nullable=True)
     notes = Column(String, nullable=True)
     photos = Column(JSON, nullable=True)  # Store list of URLs
-    created = Column(DateTime, default=datetime.utcnow)
-    updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=datetime.utcnow)
 
     # Relationship
     room = relationship("Room", back_populates="items")
