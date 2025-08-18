@@ -133,6 +133,11 @@ async def read_users(
     current_user: DBUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+
+    # Only allow propertyadmin to view users
+    if current_user.role != "propertyadmin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
     role_list = [role.strip() for role in roles.split(",") if role.strip()]
     result = await db.execute(
         select(DBUser).where(DBUser.role.in_(role_list)).where(DBUser.is_active == True)
@@ -162,3 +167,86 @@ async def update_existing_property(
     await db.commit()
     await db.refresh(db_property)
     return db_property
+    
+@app.post("/events", response_model=EventResponse)
+async def create_event_endpoint(
+    event: EventCreate,
+    current_user: DBUser = Depends(require_permission("events", "create")),
+    db: AsyncSession = Depends(get_db)
+):
+    return await create_event(db, event)
+
+
+@app.get("/events", response_model=List[EventResponse])
+async def read_events(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: DBUser = Depends(require_permission("events", "read")),
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_events(db, skip=skip, limit=limit)
+    
+    
+@app.post("/payments", response_model=PaymentResponse)
+async def create_payment_endpoint(
+    payment: PaymentCreate,
+    current_user: DBUser = Depends(require_permission("payments", "create")),
+    db: AsyncSession = Depends(get_db)
+):
+    return await create_payment(db, payment)
+
+@app.get("/payments", response_model=List[PaymentResponse])
+async def read_payments(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: DBUser = Depends(require_permission("payments", "read")),
+    db: AsyncSession = Depends(get_db)
+):
+    return await get_payments(db, skip, limit)
+    
+    
+@app.post("/inventory", response_model=InventoryResponse)
+async def create_inventory_endpoint(
+    inventory: InventoryCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "create")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await create_inventory_with_rooms(db, inventory.model_dump())
+    return result
+    
+ @app.put("/inventory/{inventory_id}", response_model=InventoryResponse)
+async def update_inventory_endpoint(
+    inventory_id: int,
+    inventory: InventoryCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    db: AsyncSession = Depends(get_db)
+):
+    # Delete old rooms and items, then recreate
+    result = await crud.update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
+    return result
+    
+    
+@app.post("/defaults/rooms", response_model=DefaultRoomResponse)
+async def create_default_room(
+    room: DefaultRoomCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    db: AsyncSession = Depends(get_db)
+):
+    db_room = DefaultRoom(**room.model_dump())
+    db.add(db_room)
+    await db.commit()
+    await db.refresh(db_room)
+    return db_room
+
+
+@app.post("/defaults/items", response_model=DefaultItemResponse)
+async def create_default_item(
+    item: DefaultItemCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    db: AsyncSession = Depends(get_db)
+):
+    db_item = DefaultItem(**item.model_dump())
+    db.add(db_item)
+    await db.commit()
+    await db.refresh(db_item)
+    return db_item

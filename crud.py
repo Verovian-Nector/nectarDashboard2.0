@@ -35,17 +35,49 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
 
 
 async def create_property(db: AsyncSession, property: PropertyCreate):
-    print("🔧 Creating property in DB...")
-    print("📥 Data:", property.model_dump())
-
+    # 1. Create the property
     db_property = DBProperty(**property.model_dump())
     db.add(db_property)
     await db.commit()
     await db.refresh(db_property)
 
-    # ✅ Call the wrapper function
-    asyncio.create_task(on_property_created(db_property))
+    # 2. Create inventory for the property
+    inventory = Inventory(property_id=db_property.id, property_name=db_property.title)
+    db.add(inventory)
+    await db.commit()
+    await db.refresh(inventory)
 
+    # 3. Get all default rooms
+    result = await db.execute(select(DefaultRoom).order_by(DefaultRoom.order))
+    default_rooms = result.scalars().all()
+
+    for default_room in default_rooms:
+        # 4. Create room
+        room = Room(inventory_id=inventory.id, room_name=default_room.room_name)
+        db.add(room)
+        await db.commit()
+        await db.refresh(room)
+
+        # 5. Get all default items for this room
+        result = await db.execute(
+            select(DefaultItem).where(DefaultItem.room_name == default_room.room_name).order_by(DefaultItem.order)
+        )
+        default_items = result.scalars().all()
+
+        for item in default_items:
+            db_item = Item(
+                room_id=room.id,
+                name=item.name,
+                brand=item.brand,
+                value=item.value,
+                condition=item.condition,
+                owner=item.owner,
+                notes=item.notes,
+                photos=item.photos
+            )
+            db.add(db_item)
+
+    await db.commit()
     return db_property
 
 
@@ -80,3 +112,51 @@ async def update_property(db: AsyncSession, property_id: int, updates: dict):
     await db.commit()
     await db.refresh(db_property)
     return db_property
+    
+async def create_event(db: AsyncSession, event: EventCreate):
+    db_event = Event(**event.model_dump())
+    db.add(db_event)
+    await db.commit()
+    await db.refresh(db_event)
+    return db_event
+
+
+async def get_events(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(select(Event).offset(skip).limit(limit))
+    return result.scalars().all()
+    
+
+async def create_payment(db: AsyncSession, payment: PaymentCreate):
+    db_payment = Payment(**payment.model_dump())
+    db.add(db_payment)
+    await db.commit()
+    await db.refresh(db_payment)
+    return db_payment
+
+async def get_payments(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(select(Payment).offset(skip).limit(limit))
+    return result.scalars().all()
+    
+async def create_inventory_with_rooms(db: AsyncSession, inventory_data: dict):
+    # Create inventory
+    inventory = Inventory(
+        property_id=inventory_data["property_id"],
+        property_name=inventory_data["property_name"]
+    )
+    db.add(inventory)
+    await db.commit()
+    await db.refresh(inventory)
+
+    # Create rooms and items
+    for room_data in inventory_data.get("rooms", []):
+        room = Room(room_name=room_data["room_name"], inventory_id=inventory.id)
+        db.add(room)
+        await db.commit()
+        await db.refresh(room)
+
+        for item_data in room_data.get("items", []):
+            item = Item(room_id=room.id, **item_data)
+            db.add(item)
+
+    await db.commit()
+    return inventory

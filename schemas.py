@@ -234,3 +234,139 @@ class PropertyResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    
+# --- Event ---
+class EventBase(BaseModel):
+    property_id: int
+    event_name: str
+    event_details: Optional[str] = None
+    lease_date: Optional[datetime] = None
+    incoming: Optional[str] = None
+    outgoing: Optional[str] = None
+    tenant: Optional[str] = None
+    incoming_color: Optional[str] = None
+    outgoing_color: Optional[str] = None
+    incoming_frequency: Optional[str] = None
+    incoming_type: Optional[str] = None
+    outgoing_type: Optional[str] = None
+    incoming_amount: Optional[float] = None
+    outgoing_amount: Optional[float] = None
+    status: Optional[str] = None
+    incoming_status: Optional[str] = None
+    outgoing_status: Optional[str] = None
+    checkout: bool = False
+    property_type: Optional[str] = None
+    payment_date: Optional[datetime] = None
+
+
+class EventCreate(EventBase):
+    pass
+
+
+class EventResponse(EventBase):
+    id: int
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# --- Payment ---
+class PaymentBase(BaseModel):
+    property_id: int
+    amount: float
+    category: Optional[str] = None
+    property_type: Optional[str] = None
+    payment_type: Optional[str] = None
+    status: Optional[str] = None
+    due_date: Optional[datetime] = None
+    tenant: Optional[str] = None
+
+
+class PaymentCreate(PaymentBase):
+    pass
+
+
+class PaymentResponse(PaymentBase):
+    id: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# --- Inventory / Rooms / Items ---
+class ItemBase(BaseModel):
+    name: str
+    brand: Optional[str] = None
+    purchase_date: Optional[datetime] = None
+    value: Optional[float] = None
+    condition: Optional[str] = None
+    owner: Optional[str] = None
+    notes: Optional[str] = None
+    photos: Optional[List[str]] = None
+
+
+class ItemCreate(ItemBase):
+    pass
+
+
+class ItemResponse(ItemBase):
+    id: int
+    created: datetime
+    updated: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class RoomBase(BaseModel):
+    room_name: str
+
+
+class RoomCreate(RoomBase):
+    items: List[ItemCreate] = []
+
+
+class RoomResponse(RoomBase):
+    id: int
+    items: List[ItemResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+class InventoryBase(BaseModel):
+    property_id: int
+    property_name: str
+
+
+class InventoryCreate(InventoryBase):
+    rooms: List[RoomCreate] = []
+
+
+class InventoryResponse(InventoryBase):
+    id: int
+    rooms: List[RoomResponse] = []
+
+    class Config:
+        from_attributes = True
+        
+class PaymentBase(BaseModel):
+    property_id: int
+    amount: float
+    category: Optional[str] = None
+    payment_type: Optional[str] = None
+    status: Optional[str] = None
+    due_date: Optional[datetime] = None
+    tenant: Optional[str] = None
+
+class PaymentCreate(PaymentBase):
+    pass
+
+class PaymentResponse(PaymentBase):
+    id: int
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
