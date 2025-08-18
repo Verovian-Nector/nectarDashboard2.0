@@ -1,11 +1,12 @@
 # crud.py
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import DBUser, DBProperty
-from schemas import UserCreate, PropertyCreate
+from database import DBUser, DBProperty, Event, Payment, Inventory, Room, Item
+from schemas import UserCreate, PropertyCreate, EventCreate, PaymentCreate, InventoryCreate
 from typing import Dict, Any
-from datetime import datetime
-import asyncio  # ✅ Add this
+from sync_to_wordpress import on_property_created, on_property_updated
+import datetime
+import asyncio
 
 # ✅ Import the wrapper function
 from sync_to_wordpress import on_property_created
