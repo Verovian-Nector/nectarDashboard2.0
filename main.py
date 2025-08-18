@@ -214,14 +214,14 @@ async def create_inventory_endpoint(
     result = await create_inventory_with_rooms(db, inventory.model_dump())
     return result
     
- @app.put("/inventory/{inventory_id}", response_model=InventoryResponse)
+    
+@app.put("/inventory/{inventory_id}", response_model=InventoryResponse)
 async def update_inventory_endpoint(
     inventory_id: int,
     inventory: InventoryCreate,
     current_user: DBUser = Depends(require_permission("inventory", "update")),
     db: AsyncSession = Depends(get_db)
 ):
-    # Delete old rooms and items, then recreate
     result = await crud.update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
     return result
     
