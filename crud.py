@@ -1,7 +1,7 @@
 # crud.py
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import DBUser, DBProperty, Event, Payment, Inventory, Room, Item
+from database import DBUser, DBProperty, Event, Payment, Inventory, Room, Item, DefaultRoom, DefaultItem
 from schemas import UserCreate, PropertyCreate, EventCreate, PaymentCreate, InventoryCreate
 from typing import Dict, Any
 from sync_to_wordpress import on_property_created, on_property_updated
