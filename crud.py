@@ -161,3 +161,15 @@ async def create_inventory_with_rooms(db: AsyncSession, inventory_data: dict):
 
     await db.commit()
     return inventory
+    
+    
+async def get_inventory(db: AsyncSession, property_id: int):
+    result = await db.execute(
+        select(Inventory).where(Inventory.property_id == property_id)
+    )
+    return result.scalars().first()
+    
+    
+async def get_inventories(db: AsyncSession, skip: int = 0, limit: int = 100):
+    result = await db.execute(select(Inventory).offset(skip).limit(limit))
+    return result.scalars().all()
