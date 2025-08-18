@@ -20,6 +20,8 @@ from schemas import (
     UserResponse,
     PropertyCreate,
     PropertyResponse,
+    PropertyUpdate,
+    Token,  # ✅ Add this
     EventCreate,
     EventResponse,
     PaymentCreate,
