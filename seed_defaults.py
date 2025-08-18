@@ -1,7 +1,8 @@
 # seed_defaults.py
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import engine, Base, AsyncSessionLocal
-from models import DefaultRoom, DefaultItem
+from database import DefaultRoom, DefaultItem  # ✅ Import from database.py
 
 async def seed_defaults():
     async with AsyncSessionLocal() as db:
@@ -25,3 +26,6 @@ async def seed_defaults():
         await db.commit()
 
         print("✅ Default rooms and items seeded!")
+
+# Run it
+asyncio.run(seed_defaults())
