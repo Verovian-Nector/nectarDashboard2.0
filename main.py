@@ -13,7 +13,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from schemas import (
     UserCreate,
@@ -207,7 +207,7 @@ async def update_existing_property(
     updates = property_update.model_dump(exclude_unset=True)
     for key, value in updates.items():
         setattr(db_property, key, value)
-    db_property.updated_at = datetime.datetime.utcnow()
+    db_property.updated_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(db_property)
     return db_property

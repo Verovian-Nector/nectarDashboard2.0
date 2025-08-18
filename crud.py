@@ -5,7 +5,7 @@ from database import DBUser, DBProperty, Event, Payment, Inventory, Room, Item
 from schemas import UserCreate, PropertyCreate, EventCreate, PaymentCreate, InventoryCreate
 from typing import Dict, Any
 from sync_to_wordpress import on_property_created, on_property_updated
-import datetime
+from datetime import datetime, timezone
 import asyncio
 
 # ✅ Import the wrapper function
@@ -108,7 +108,7 @@ async def update_property(db: AsyncSession, property_id: int, updates: dict):
         if key != "acf":
             setattr(db_property, key, value)
 
-    db_property.updated_at = datetime.datetime.utcnow()
+    db_property.updated_at = datetime.now(timezone.utc)
 
     await db.commit()
     await db.refresh(db_property)
