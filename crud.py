@@ -91,9 +91,15 @@ async def create_property(db: AsyncSession, property: PropertyCreate):
     return db_property
 
 
-async def get_property(db: AsyncSession, property_id: int):
-    return await db.get(DBProperty, property_id)
-
+async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
+    """
+    Get a list of properties with pagination
+    """
+    result = await db.execute(
+        select(DBProperty).offset(skip).limit(limit)
+    )
+    return result.scalars().all()
+    
 
 async def update_property(db: AsyncSession, property_id: int, updates: dict):
     db_property = await db.get(DBProperty, property_id)
