@@ -56,16 +56,6 @@ class ContentField(BaseModel):
     protected: bool
 
 
-# schemas.py
-class PropertyCreate(BaseModel):
-    title: str
-    address: str
-    acf: Optional[Dict[str, Any]] = None
-
-    class Config:
-        from_attributes = True
-
-
 # ==================== ACF Group Schemas ====================
 
 class FileUpload(BaseModel):
@@ -187,7 +177,7 @@ class ProfileGroup(BaseModel):
 GalleryPhotos = Union[List[str], bool, Dict[str, Any]]
 
 
-# ==================== ACF Update Schema ====================
+# ==================== ACF Update Schema 
 
 class ACFUpdate(BaseModel):
     # All ACF groups — each can be updated independently
@@ -200,34 +190,6 @@ class ACFUpdate(BaseModel):
     profile_management: Optional[ProfileManagement] = None
     profilegroup: Optional[ProfileGroup] = None
     gallery_photos: Optional[GalleryPhotos] = None  # ✅ Now valid
-
-
-# ==================== Property Update & Response ====================
-
-class PropertyUpdate(BaseModel):
-    title: Optional[str] = None
-    address: Optional[str] = None
-    owner_id: Optional[int] = None
-    acf: Optional[ACFUpdate] = None
-
-
-class PropertyResponse(BaseModel):
-    id: int
-    title: str
-    address: str
-    owner_id: int
-    tenant_info: Optional[Dict[Any, Any]] = None
-    financial_info: Optional[Dict[Any, Any]] = None
-    maintenance_records: Optional[List[Dict[Any, Any]]] = None
-    documents: Optional[List[Dict[Any, Any]]] = None
-    inventory: Optional[List[InventoryResponse]] = None
-    inspections: Optional[Dict[Any, Any]] = None
-    acf: Optional[Dict[Any, Any]] = None
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class Token(BaseModel):
@@ -318,7 +280,7 @@ class ItemResponse(ItemBase):
     class Config:
         from_attributes = True
 
-
+# ==================== room
 class RoomBase(BaseModel):
     room_name: str
 
@@ -334,7 +296,7 @@ class RoomResponse(RoomBase):
     class Config:
         from_attributes = True
 
-
+# ==================== Inventory
 class InventoryBase(BaseModel):
     property_id: int
     property_name: str
@@ -350,7 +312,44 @@ class InventoryResponse(InventoryBase):
 
     class Config:
         from_attributes = True
+
+
+# ==================== Property 
+class PropertyCreate(BaseModel):
+    title: str
+    address: str
+    acf: Optional[Dict[str, Any]] = None
+
+    class Config:
+        from_attributes = True
         
+        
+class PropertyUpdate(BaseModel):
+    title: Optional[str] = None
+    address: Optional[str] = None
+    owner_id: Optional[int] = None
+    acf: Optional[ACFUpdate] = None
+
+
+class PropertyResponse(BaseModel):
+    id: int
+    title: str
+    address: str
+    owner_id: int
+    tenant_info: Optional[Dict[Any, Any]] = None
+    financial_info: Optional[Dict[Any, Any]] = None
+    maintenance_records: Optional[List[Dict[Any, Any]]] = None
+    documents: Optional[List[Dict[Any, Any]]] = None
+    inventory: Optional[List[InventoryResponse]] = None
+    inspections: Optional[Dict[Any, Any]] = None
+    acf: Optional[Dict[Any, Any]] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+        
+# ==================== payment
 class PaymentBase(BaseModel):
     property_id: int
     amount: float
