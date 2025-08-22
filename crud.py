@@ -145,10 +145,10 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
     "updated_at": db_property.updated_at,
     "inventory": [
         {
-            "id": inventory.id,
-            "name": inventory.property_name,
-            "property_id": inventory.property_id,
-            "rooms": []
+        "id": inventory.id,
+        "property_id": inventory.property_id,
+        "property_name": inventory.property_name,
+        "rooms": []
         }
     ]
 }
