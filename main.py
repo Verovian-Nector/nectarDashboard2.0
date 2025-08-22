@@ -152,10 +152,12 @@ async def read_current_user(
 
 @app.get("/properties", response_model=List[schemas.PropertyResponse])
 async def get_properties_endpoint(
+    skip: int = 0,
+    limit: int = 100,
     db: AsyncSession = Depends(get_db),
-    current_user: models.DBUser = Depends(auth.get_current_user)
+    current_user: DBUser = Depends(get_current_user),
 ):
-    properties = await crud.get_properties(db)
+    properties = await crud.get_properties(db, skip=skip, limit=limit)
     return properties
 
 
