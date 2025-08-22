@@ -332,10 +332,19 @@ async def update_inventory_endpoint(
     
 # ==================== DEFAULT ENDPOINTS ====================
     
-@app.post("/defaults/rooms", response_model=DefaultRoomResponse)
+@app.get("/defaults/rooms", response_model=List[schemas.DefaultRoomResponse])
+async def get_default_rooms(
+    db: AsyncSession = Depends(get_db),
+    current_user: DBUser = Depends(require_permission("inventory", "read"))
+):
+    result = await db.execute(select(DefaultRoom).order_by(DefaultRoom.order))
+    return result.scalars().all()
+
+
+@app.post("/defaults/rooms", response_model=schemas.DefaultRoomResponse)
 async def create_default_room(
-    room: DefaultRoomCreate,
-    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    room: schemas.DefaultRoomCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "create")),
     db: AsyncSession = Depends(get_db)
 ):
     db_room = DefaultRoom(**room.model_dump())
@@ -345,10 +354,35 @@ async def create_default_room(
     return db_room
 
 
-@app.post("/defaults/items", response_model=DefaultItemResponse)
+@app.delete("/defaults/rooms/{room_id}")
+async def delete_default_room(
+    room_id: int,
+    current_user: DBUser = Depends(require_permission("inventory", "delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(DefaultRoom).where(DefaultRoom.id == room_id))
+    room = result.scalar()
+    if not room:
+        raise HTTPException(status_code=404, detail="Default room not found")
+    
+    await db.execute(delete(DefaultRoom).where(DefaultRoom.id == room_id))
+    await db.commit()
+    return {"message": "Default room deleted"}
+
+
+@app.get("/defaults/items", response_model=List[schemas.DefaultItemResponse])
+async def get_default_items(
+    db: AsyncSession = Depends(get_db),
+    current_user: DBUser = Depends(require_permission("inventory", "read"))
+):
+    result = await db.execute(select(DefaultItem).order_by(DefaultItem.order))
+    return result.scalars().all()
+
+
+@app.post("/defaults/items", response_model=schemas.DefaultItemResponse)
 async def create_default_item(
-    item: DefaultItemCreate,
-    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    item: schemas.DefaultItemCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "create")),
     db: AsyncSession = Depends(get_db)
 ):
     db_item = DefaultItem(**item.model_dump())
@@ -356,3 +390,21 @@ async def create_default_item(
     await db.commit()
     await db.refresh(db_item)
     return db_item
+
+
+@app.delete("/defaults/items/{item_id}")
+async def delete_default_item(
+    item_id: int,
+    current_user: DBUser = Depends(require_permission("inventory", "delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(DefaultItem).where(DefaultItem.id == item_id))
+    item = result.scalar()
+    if not item:
+        raise HTTPException(status_code=404, detail="Default item not found")
+    
+    await db.execute(delete(DefaultItem).where(DefaultItem.id == item_id))
+    await db.commit()
+    return {"message": "Default item deleted"}
+
+

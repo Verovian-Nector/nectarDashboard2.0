@@ -357,3 +357,5 @@ async def get_inventory(db: AsyncSession, property_id: int):
 async def get_inventories(db: AsyncSession, skip: int = 0, limit: int = 100):
     result = await db.execute(select(Inventory).offset(skip).limit(limit))
     return result.scalars().all()
+
+
