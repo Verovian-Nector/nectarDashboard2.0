@@ -138,6 +138,7 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
     "id": db_property.id,
     "title": db_property.title,
     "address": db_property.address,
+    "description":db_property.description,
     "owner_id": db_property.owner_id,
     "inspections": db_property.inspections,
     "created_at": db_property.created_at,

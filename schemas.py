@@ -158,7 +158,6 @@ class ProfileManagement(BaseModel):
 # Property Details - Profile Group (Main Details)
 class ProfileGroup(BaseModel):
     postcode: Optional[str] = None
-    price: Optional[Union[int, float]] = None
     payment_frequency: Optional[str] = None
     house_number: Optional[Union[int, str]] = None
     location: Optional[str] = None
@@ -330,6 +329,7 @@ class PropertyCreate(BaseModel):
 class PropertyUpdate(BaseModel):
     title: Optional[str] = None
     address: Optional[str] = None
+    description: [str] = None
     owner_id: Optional[int] = None
     acf: Optional[ACFUpdate] = None
 
@@ -338,6 +338,7 @@ class PropertyResponse(BaseModel):
     id: int
     title: str
     address: str
+    description: str
     owner_id: int
     tenant_info: Optional[Dict[Any, Any]] = None
     financial_info: Optional[Dict[Any, Any]] = None
