@@ -7,7 +7,7 @@ from schemas import (
     PropertyResponse,
     PropertyUpdate,
     PropertyInspectionUpdate,
-    Token,  # ✅ Add this
+    Token,
     EventCreate,
     EventResponse,
     PaymentCreate,
