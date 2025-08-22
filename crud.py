@@ -59,32 +59,31 @@ async def get_property(db: AsyncSession, property_id: int):
         "created_at": property_obj.created_at,
         "updated_at": property_obj.updated_at,
         "inventory": [
+    {
+        "id": property_obj.inventory.id,
+        "property_id": property_obj.inventory.property_id,
+        "property_name": property_obj.inventory.property_name,
+        "rooms": [
             {
-                "id": inv.id,
-                "property_id": inv.property_id,
-                "property_name": inv.property_name,
-                "rooms": [
+                "id": room.id,
+                "room_name": room.room_name,
+                "room_type": room.room_type,
+                "items": [
                     {
-                        "id": room.id,
-                        "room_name": room.room_name,
-                        "room_type": room.room_type,
-                        "items": [
-                            {
-                                "id": item.id,
-                                "name": item.name,
-                                "item_type": item.item_type,
-                                "quantity": item.quantity,
-                                "notes": item.notes,
-                                "room_id": item.room_id
-                            }
-                            for item in room.items
-                        ]
+                        "id": item.id,
+                        "name": item.name,
+                        "item_type": item.item_type,
+                        "quantity": item.quantity,
+                        "notes": item.notes,
+                        "room_id": item.room_id
                     }
-                    for room in inv.rooms
+                    for item in room.items
                 ]
             }
-            for inv in property_obj.inventory
-        ] if property_obj.inventory else []
+            for room in property_obj.inventory.rooms
+        ]
+    }
+] if property_obj.inventory else []
     }
 
 
