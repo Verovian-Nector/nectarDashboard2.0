@@ -158,9 +158,62 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
     Get a list of properties with pagination
     """
     result = await db.execute(
-        select(DBProperty).offset(skip).limit(limit)
+        select(DBProperty)
+        .options(
+            selectinload(DBProperty.inventory)
+            .selectinload(Inventory.rooms)
+            .selectinload(Room.items)
+        )
+        .offset(skip)
+        .limit(limit)
     )
-    return result.scalars().all()
+    properties = result.scalars().all()
+
+    # Convert each property to a dict to avoid ORM serialization issues
+    return [
+        {
+            "id": prop.id,
+            "title": prop.title,
+            "address": prop.address,
+            "owner_id": prop.owner_id,
+            "tenant_info": prop.tenant_info,
+            "financial_info": prop.financial_info,
+            "maintenance_records": prop.maintenance_records,
+            "documents": prop.documents,
+            "inspections": prop.inspections,
+            "acf": prop.acf,
+            "created_at": prop.created_at,
+            "updated_at": prop.updated_at,
+            "inventory": [
+                {
+                    "id": prop.inventory.id,
+                    "property_id": prop.inventory.property_id,
+                    "property_name": prop.inventory.property_name,
+                    "rooms": [
+                        {
+                            "id": room.id,
+                            "room_name": room.room_name,
+                            "room_type": room.room_type,
+                            "items": [
+                                {
+                                    "id": item.id,
+                                    "name": item.name,
+                                    "item_type": item.item_type,
+                                    "quantity": item.quantity,
+                                    "notes": item.notes,
+                                    "room_id": item.room_id
+                                }
+                                for item in room.items
+                            ]
+                        }
+                        for room in prop.inventory.rooms
+                    ]
+                }
+            ] if prop.inventory else []
+        }
+        for prop in properties
+    ]
+ )
     
 
 async def update_property(db: AsyncSession, property_id: int, updates: dict):
