@@ -44,7 +44,7 @@ from crud import (
     get_user,
     create_user,
     get_properties,
-    create_property as crud_create_property,
+    create_property,
     update_property,
     create_event,
     get_events,
@@ -166,7 +166,7 @@ async def create_new_property(
     current_user: DBUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    db_property = await crud.create_property(db, property, current_user.id)
+    db_property = await create_property(db, property, current_user.id)
     return db_property
 
     # Convert to dict to avoid ORM serialization issues
