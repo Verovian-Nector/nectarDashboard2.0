@@ -349,6 +349,17 @@ class PropertyResponse(BaseModel):
     class Config:
         from_attributes = True
         
+        
+class PropertyInspectionUpdate(BaseModel):
+    inspector: str
+    notes: Optional[str] = None
+    score: Optional[int] = None
+    issues_found: List[str] = []
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+        
 # ==================== payment
 class PaymentBase(BaseModel):
     property_id: int
