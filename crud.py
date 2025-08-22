@@ -101,7 +101,7 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
     if property.acf:
         db_property.acf = property.acf.model_dump(exclude_unset=True)
         await db.commit()
-        await db.refresh(db_property))
+        await db.refresh(db_property)
 
     # 3. Get all default rooms
     result = await db.execute(select(DefaultRoom).order_by(DefaultRoom.order))
