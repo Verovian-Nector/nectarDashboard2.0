@@ -31,7 +31,7 @@ async def create_user(db: AsyncSession, user: UserCreate):
     return db_user
 
 
-async def get_property(db: AsyncSession, property_id: int):
+async def get_property(db: AsyncSession, property_id: int) -> Dict[str, Any]:
     result = await db.execute(
         select(DBProperty)
         .options(
@@ -41,7 +41,47 @@ async def get_property(db: AsyncSession, property_id: int):
         )
         .where(DBProperty.id == property_id)
     )
-    return result.scalar()
+    property_obj = result.scalar()
+    if not property_obj:
+        return None
+
+    # Convert to dict manually to avoid ORM access during serialization
+    return {
+        "id": property_obj.id,
+        "title": property_obj.title,
+        "address": property_obj.address,
+        "owner_id": property_obj.owner_id,
+        "inspections": property_obj.inspections,
+        "created_at": property_obj.created_at,
+        "updated_at": property_obj.updated_at,
+        "inventory": [
+            {
+                "id": inv.id,
+                "name": inv.name,
+                "property_id": inv.property_id,
+                "rooms": [
+                    {
+                        "id": room.id,
+                        "name": room.name,
+                        "room_type": room.room_type,
+                        "items": [
+                            {
+                                "id": item.id,
+                                "name": item.name,
+                                "item_type": item.item_type,
+                                "quantity": item.quantity,
+                                "notes": item.notes,
+                                "room_id": item.room_id
+                            }
+                            for item in room.items
+                        ]
+                    }
+                    for room in inv.rooms
+                ]
+            }
+            for inv in property_obj.inventory
+        ] if property_obj.inventory else []
+    }
 
 
 async def create_property(db: AsyncSession, property: PropertyCreate):
