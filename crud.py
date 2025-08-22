@@ -84,9 +84,9 @@ async def get_property(db: AsyncSession, property_id: int):
     }
 
 
-async def create_property(db: AsyncSession, property: PropertyCreate):
+async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: int):
     # 1. Create the property
-    db_property = DBProperty(**property.model_dump())
+    db_property = DBProperty(**property.model_dump(),owner_id=owner_id)
     db.add(db_property)
     await db.commit()
     await db.refresh(db_property)
