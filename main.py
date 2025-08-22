@@ -151,14 +151,25 @@ async def read_current_user(
 # ==================== PROPERTY ENDPOINTS ====================
 
 @app.get("/properties", response_model=List[PropertyResponse])
-async def get_properties_endpoint(
+async def read_properties(
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db),
-    current_user: DBUser = Depends(get_current_user),
+    current_user: DBUser = Depends(get_current_user)
 ):
-    properties = await crud.get_properties(db, skip=skip, limit=limit)
-    return properties
+    return await get_properties(db, skip=skip, limit=limit)
+    
+    
+@app.get("/properties/{property_id}", response_model=PropertyResponse)
+async def read_property(
+    property_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user)
+):
+    property = await get_property(db, property_id)
+    if not property:
+        raise HTTPException(status_code=404, detail="Property not found")
+    return property
 
 
 @app.post("/properties", response_model=PropertyResponse)
