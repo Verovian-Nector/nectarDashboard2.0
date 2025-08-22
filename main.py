@@ -161,12 +161,54 @@ async def read_properties(
 
 
 @app.post("/properties", response_model=PropertyResponse)
-async def create_new_property(
+async def create_property(
     property: PropertyCreate,
-    current_user: DBUser = Depends(require_permission("properties", "create")),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: DBUser = Depends(require_permission("properties", "create"))
 ):
-    return await create_property(db, property)
+    db_property = await crud.create_property(db, property, current_user.id)
+
+    # Convert to dict to avoid ORM serialization issues
+    return {
+        "id": db_property.id,
+        "title": db_property.title,
+        "address": db_property.address,
+        "owner_id": db_property.owner_id,
+        "tenant_info": db_property.tenant_info,
+        "financial_info": db_property.financial_info,
+        "maintenance_records": db_property.maintenance_records,
+        "documents": db_property.documents,
+        "inspections": db_property.inspections,
+        "created_at": db_property.created_at,
+        "updated_at": db_property.updated_at,
+        "inventory": [  # Manually include inventory
+            {
+                "id": inv.id,
+                "property_id": inv.property_id,
+                "property_name": inv.property_name,
+                "rooms": [
+                    {
+                        "id": room.id,
+                        "name": room.name,
+                        "room_type": room.room_type,
+                        "items": [
+                            {
+                                "id": item.id,
+                                "name": item.name,
+                                "item_type": item.item_type,
+                                "quantity": item.quantity,
+                                "notes": item.notes,
+                                "room_id": item.room_id
+                            }
+                            for item in room.items
+                        ]
+                    }
+                    for room in inv.rooms
+                ]
+            }
+            for inv in db_property.inventory
+        ] if hasattr(db_property, 'inventory') and db_property.inventory else []
+    }
 
 
 # ==================== USER MANAGEMENT ====================

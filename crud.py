@@ -31,7 +31,7 @@ async def create_user(db: AsyncSession, user: UserCreate):
     return db_user
 
 
-async def get_property(db: AsyncSession, property_id: int) -> Dict[str, Any]:
+async def get_property(db: AsyncSession, property_id: int):
     result = await db.execute(
         select(DBProperty)
         .options(
@@ -41,9 +41,7 @@ async def get_property(db: AsyncSession, property_id: int) -> Dict[str, Any]:
         )
         .where(DBProperty.id == property_id)
     )
-    property_obj = result.scalar()
-    if not property_obj:
-        return None
+    return result.scalar()
 
     # Convert to dict manually to avoid ORM access during serialization
     return {
