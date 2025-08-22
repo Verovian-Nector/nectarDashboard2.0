@@ -89,19 +89,19 @@ async def get_property(db: AsyncSession, property_id: int):
 
 async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: int):
     # 1. Create the property
-    # Create property with data from request, but override owner_id
-    property_data = property.model_dump()
-    property_data['owner_id'] = owner_id  # Force owner_id from current_user
-    db_property = DBProperty(**property_data)
+    db_property = DBProperty(
+        **property.model_dump(exclude={"acf"}),
+        owner_id=owner_id
+    )
     db.add(db_property)
     await db.commit()
     await db.refresh(db_property)
 
-    # 2. Create inventory for the property
-    inventory = Inventory(property_id=db_property.id, property_name=db_property.title)
-    db.add(inventory)
-    await db.commit()
-    await db.refresh(inventory)
+    # 2. Handle ACF data
+    if property.acf:
+        db_property.acf = property.acf.model_dump(exclude_unset=True)
+        await db.commit()
+        await db.refresh(db_property))
 
     # 3. Get all default rooms
     result = await db.execute(select(DefaultRoom).order_by(DefaultRoom.order))

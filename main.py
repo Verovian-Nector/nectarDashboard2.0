@@ -187,6 +187,7 @@ async def create_new_property(
         "id": db_property.id,
         "title": db_property.title,
         "address": db_property.address,
+        "description": db_property.description,
         "owner_id": db_property.owner_id,
         "tenant_info": db_property.tenant_info,
         "financial_info": db_property.financial_info,

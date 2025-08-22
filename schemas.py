@@ -162,7 +162,6 @@ class ProfileGroup(BaseModel):
     payment_frequency: Optional[str] = None
     house_number: Optional[Union[int, str]] = None
     location: Optional[str] = None
-    referencecode: Optional[str] = None
     beds: Optional[Union[int, str]] = None
     bathrooms: Optional[Union[int, str]] = None
     living_rooms: Optional[Union[int, str]] = None
@@ -170,6 +169,10 @@ class ProfileGroup(BaseModel):
     furnished: Optional[str] = None
     property_type: Optional[str] = None
     marketing_status: Optional[str] = None
+    incoming_price: Optional[Union[int, float]] = None
+    incoming_payment_frequency: Optional[str] = None
+    outgoing_price: Optional[Union[int, float]] = None
+    outgoing_payment_frequency: Optional[str] = None
 
 
 # Gallery
@@ -180,7 +183,6 @@ GalleryPhotos = Union[List[str], bool, Dict[str, Any]]
 # ==================== ACF Update Schema 
 
 class ACFUpdate(BaseModel):
-    # All ACF groups — each can be updated independently
     inspection_group: Optional[ACFInspectionGroup] = None
     inventory_group: Optional[InventoryGroup] = None
     documents_group: Optional[DocumentsGroupFull] = None
@@ -188,8 +190,8 @@ class ACFUpdate(BaseModel):
     financial_group: Optional[FinancialGroup] = None
     tenants_group: Optional[TenantsGroup] = None
     profile_management: Optional[ProfileManagement] = None
-    profilegroup: Optional[ProfileGroup] = None
-    gallery_photos: Optional[GalleryPhotos] = None  # ✅ Now valid
+    profilegroup: Optional[ProfileGroup] = None  # ← Add this
+    gallery_photos: Optional[GalleryPhotos] = None
 
 
 class Token(BaseModel):
@@ -318,7 +320,8 @@ class InventoryResponse(InventoryBase):
 class PropertyCreate(BaseModel):
     title: str
     address: str
-    acf: Optional[Dict[str, Any]] = None
+    description: str
+    acf: Optional[ACFUpdate] = None
 
     class Config:
         from_attributes = True
