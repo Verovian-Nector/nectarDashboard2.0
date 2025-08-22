@@ -1,20 +1,4 @@
 # main.py
-from fastapi import FastAPI, Depends, HTTPException, status, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from typing import List
-from datetime import datetime
-
-from fastapi import FastAPI, Depends, HTTPException, status, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from typing import List
-from datetime import datetime, timezone
-
 from schemas import (
     UserCreate,
     UserResponse,
@@ -22,6 +6,7 @@ from schemas import (
     PropertyCreate,
     PropertyResponse,
     PropertyUpdate,
+    PropertyInspectionUpdate,
     Token,  # ✅ Add this
     EventCreate,
     EventResponse,
@@ -38,6 +23,21 @@ from schemas import (
     DefaultItemResponse,
     DefaultItemCreate,
 )
+from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import List
+from datetime import datetime
+
+from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import List
+from datetime import datetime, timezone
 
 from database import engine, get_db, Base, DBUser, DBProperty
 from crud import (
