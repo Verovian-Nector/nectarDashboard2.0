@@ -166,7 +166,7 @@ async def create_property(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("properties", "create"))
 ):
-    db_property = await crud.create_property(db, property, current_user.id)
+    db_property = await create_property(db, property, current_user.id)
 
     # Convert to dict to avoid ORM serialization issues
     return {
