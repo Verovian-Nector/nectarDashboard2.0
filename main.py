@@ -181,7 +181,7 @@ async def create_property(
         "inspections": db_property.inspections,
         "created_at": db_property.created_at,
         "updated_at": db_property.updated_at,
-        "inventory": [  # Manually include inventory
+        "inventory": [
             {
                 "id": inv.id,
                 "property_id": inv.property_id,
@@ -207,7 +207,7 @@ async def create_property(
                 ]
             }
             for inv in db_property.inventory
-        ] if hasattr(db_property, 'inventory') and db_property.inventory else []
+        ] if db_property.inventory else []
     }
 
 
