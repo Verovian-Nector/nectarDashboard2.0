@@ -150,14 +150,13 @@ async def read_current_user(
 
 # ==================== PROPERTY ENDPOINTS ====================
 
-@app.get("/properties", response_model=List[PropertyResponse])
-async def read_properties(
-    skip: int = 0,
-    limit: int = 100,
-    current_user: DBUser = Depends(require_permission("properties", "read")),
-    db: AsyncSession = Depends(get_db)
+@app.get("/properties", response_model=List[schemas.PropertyResponse])
+async def get_properties_endpoint(
+    db: AsyncSession = Depends(get_db),
+    current_user: models.DBUser = Depends(auth.get_current_user)
 ):
-    return await get_properties(db, skip=skip, limit=limit)
+    properties = await crud.get_properties(db)
+    return properties
 
 
 @app.post("/properties", response_model=PropertyResponse)
@@ -254,6 +253,9 @@ async def update_existing_property(
     await db.commit()
     await db.refresh(db_property)
     return db_property
+
+
+# ==================== EVENTS ENDPOINTS ====================
     
 @app.post("/events", response_model=EventResponse)
 async def create_event_endpoint(
@@ -273,6 +275,7 @@ async def read_events(
 ):
     return await get_events(db, skip=skip, limit=limit)
     
+# ==================== PAYMENTS ENDPOINTS ====================
     
 @app.post("/payments", response_model=PaymentResponse)
 async def create_payment_endpoint(
@@ -291,6 +294,7 @@ async def read_payments(
 ):
     return await get_payments(db, skip, limit)
     
+# ==================== INVENTORY ENDPOINTS ====================
     
 @app.post("/inventory", response_model=InventoryResponse)
 async def create_inventory_endpoint(
@@ -312,6 +316,7 @@ async def update_inventory_endpoint(
     result = await update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
     return result
     
+# ==================== DEFAULT ENDPOINTS ====================
     
 @app.post("/defaults/rooms", response_model=DefaultRoomResponse)
 async def create_default_room(
