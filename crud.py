@@ -213,7 +213,6 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
         }
         for prop in properties
     ]
- )
     
 
 async def update_property(db: AsyncSession, property_id: int, updates: dict):
