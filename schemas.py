@@ -60,7 +60,6 @@ class ContentField(BaseModel):
 class PropertyCreate(BaseModel):
     title: str
     address: str
-    owner_id: int
     acf: Optional[Dict[str, Any]] = None
 
     class Config:

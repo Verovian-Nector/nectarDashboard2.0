@@ -86,7 +86,10 @@ async def get_property(db: AsyncSession, property_id: int):
 
 async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: int):
     # 1. Create the property
-    db_property = DBProperty(**property.model_dump(),owner_id=owner_id)
+    # Create property with data from request, but override owner_id
+    property_data = property.model_dump()
+    property_data['owner_id'] = owner_id  # Force owner_id from current_user
+    db_property = DBProperty(**property_data)
     db.add(db_property)
     await db.commit()
     await db.refresh(db_property)
