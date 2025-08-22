@@ -59,33 +59,33 @@ async def get_property(db: AsyncSession, property_id: int):
         "created_at": property_obj.created_at,
         "updated_at": property_obj.updated_at,
         "inventory": [
-    {
-        "id": inv.id,
-        "property_id": inv.property_id,
-        "property_name": inv.property_name,  # ← Must be this
-        "rooms": [
             {
-                "id": room.id,
-                "room_name": room.room_name,
-                "room_type": room.room_type,
-                "items": [
+                "id": inv.id,
+                "property_id": inv.property_id,
+                "property_name": inv.property_name,
+                "rooms": [
                     {
-                        "id": item.id,
-                        "name": item.name,
-                        "item_type": item.item_type,
-                        "quantity": item.quantity,
-                        "notes": item.notes,
-                        "room_id": item.room_id
+                        "id": room.id,
+                        "room_name": room.room_name,
+                        "room_type": room.room_type,
+                        "items": [
+                            {
+                                "id": item.id,
+                                "name": item.name,
+                                "item_type": item.item_type,
+                                "quantity": item.quantity,
+                                "notes": item.notes,
+                                "room_id": item.room_id
+                            }
+                            for item in room.items
+                        ]
                     }
-                    for item in room.items
+                    for room in inv.rooms
                 ]
             }
-            for room in inv.rooms
-        ]
+            for inv in property_obj.inventory
+        ] if property_obj.inventory else []
     }
-    for inv in property_obj.inventory
-] if property_obj.inventory else []
-}
 
 
 async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: int):
