@@ -41,9 +41,11 @@ async def get_property(db: AsyncSession, property_id: int):
         )
         .where(DBProperty.id == property_id)
     )
-    return result.scalar()
+    property_obj = result.scalar()
+    if not property_obj:
+        return None
 
-    # Convert to dict manually to avoid ORM access during serialization
+    # Convert to dict to avoid ORM access during serialization
     return {
         "id": property_obj.id,
         "title": property_obj.title,
@@ -55,12 +57,12 @@ async def get_property(db: AsyncSession, property_id: int):
         "inventory": [
             {
                 "id": inv.id,
-                "name": inv.name,
+                "name": inv.property_name,
                 "property_id": inv.property_id,
                 "rooms": [
                     {
                         "id": room.id,
-                        "name": room.name,
+                        "name": room.room_name,
                         "room_type": room.room_type,
                         "items": [
                             {
@@ -126,7 +128,23 @@ async def create_property(db: AsyncSession, property: PropertyCreate):
             db.add(db_item)
 
     await db.commit()
-    return db_property
+    return {
+    "id": db_property.id,
+    "title": db_property.title,
+    "address": db_property.address,
+    "owner_id": db_property.owner_id,
+    "inspections": db_property.inspections,
+    "created_at": db_property.created_at,
+    "updated_at": db_property.updated_at,
+    "inventory": [
+        {
+            "id": inventory.id,
+            "name": inventory.property_name,
+            "property_id": inventory.property_id,
+            "rooms": []
+        }
+    ]
+}
 
 
 async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
