@@ -332,7 +332,7 @@ async def update_inventory_endpoint(
     
 # ==================== DEFAULT ENDPOINTS ====================
     
-@app.get("/defaults/rooms", response_model=List[schemas.DefaultRoomResponse])
+@app.get("/defaults/rooms", response_model=List[DefaultRoomResponse])
 async def get_default_rooms(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("inventory", "read"))
@@ -341,9 +341,9 @@ async def get_default_rooms(
     return result.scalars().all()
 
 
-@app.post("/defaults/rooms", response_model=schemas.DefaultRoomResponse)
+@app.post("/defaults/rooms", response_model=DefaultRoomResponse)
 async def create_default_room(
-    room: schemas.DefaultRoomCreate,
+    room: DefaultRoomCreate,
     current_user: DBUser = Depends(require_permission("inventory", "create")),
     db: AsyncSession = Depends(get_db)
 ):
@@ -370,7 +370,7 @@ async def delete_default_room(
     return {"message": "Default room deleted"}
 
 
-@app.get("/defaults/items", response_model=List[schemas.DefaultItemResponse])
+@app.get("/defaults/items", response_model=List[DefaultItemResponse])
 async def get_default_items(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("inventory", "read"))
@@ -379,9 +379,9 @@ async def get_default_items(
     return result.scalars().all()
 
 
-@app.post("/defaults/items", response_model=schemas.DefaultItemResponse)
+@app.post("/defaults/items", response_model=DefaultItemResponse)
 async def create_default_item(
-    item: schemas.DefaultItemCreate,
+    item: DefaultItemCreate,
     current_user: DBUser = Depends(require_permission("inventory", "create")),
     db: AsyncSession = Depends(get_db)
 ):
