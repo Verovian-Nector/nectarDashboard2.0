@@ -150,7 +150,7 @@ async def read_current_user(
 
 # ==================== PROPERTY ENDPOINTS ====================
 
-@app.get("/properties", response_model=List[schemas.PropertyResponse])
+@app.get("/properties", response_model=List[PropertyResponse])
 async def get_properties_endpoint(
     skip: int = 0,
     limit: int = 100,
