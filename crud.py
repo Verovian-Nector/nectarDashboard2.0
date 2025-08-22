@@ -45,24 +45,28 @@ async def get_property(db: AsyncSession, property_id: int):
     if not property_obj:
         return None
 
-    # Convert to dict to avoid ORM access during serialization
     return {
         "id": property_obj.id,
         "title": property_obj.title,
         "address": property_obj.address,
         "owner_id": property_obj.owner_id,
+        "tenant_info": property_obj.tenant_info,
+        "financial_info": property_obj.financial_info,
+        "maintenance_records": property_obj.maintenance_records,
+        "documents": property_obj.documents,
         "inspections": property_obj.inspections,
+        "acf": property_obj.acf,
         "created_at": property_obj.created_at,
         "updated_at": property_obj.updated_at,
         "inventory": [
             {
                 "id": inv.id,
-                "name": inv.property_name,
                 "property_id": inv.property_id,
+                "property_name": inv.property_name,
                 "rooms": [
                     {
                         "id": room.id,
-                        "name": room.room_name,
+                        "room_name": room.room_name,
                         "room_type": room.room_type,
                         "items": [
                             {
