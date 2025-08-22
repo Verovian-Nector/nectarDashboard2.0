@@ -329,7 +329,7 @@ class PropertyCreate(BaseModel):
 class PropertyUpdate(BaseModel):
     title: Optional[str] = None
     address: Optional[str] = None
-    description: [str] = None
+    description: Optional[str] = None
     owner_id: Optional[int] = None
     acf: Optional[ACFUpdate] = None
 
