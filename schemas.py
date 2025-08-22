@@ -220,7 +220,7 @@ class PropertyResponse(BaseModel):
     financial_info: Optional[Dict[Any, Any]] = None
     maintenance_records: Optional[List[Dict[Any, Any]]] = None
     documents: Optional[List[Dict[Any, Any]]] = None
-    inventory: Optional[Dict[Any, Any]] = None
+        inventory: Optional[List[InventoryResponse]] = None  # ← Now a list
     inspections: Optional[Dict[Any, Any]] = None
     acf: Optional[Dict[Any, Any]] = None
     created_at: datetime
