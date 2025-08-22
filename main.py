@@ -44,6 +44,7 @@ from crud import (
     get_user,
     create_user,
     get_properties,
+    get_property,
     create_property,
     update_property,
     create_event,
