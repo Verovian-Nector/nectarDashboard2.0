@@ -369,6 +369,26 @@ async def delete_default_room(
     await db.execute(delete(DefaultRoom).where(DefaultRoom.id == room_id))
     await db.commit()
     return {"message": "Default room deleted"}
+    
+    
+@app.put("/defaults/rooms/{room_id}", response_model=DefaultRoomResponse)
+async def update_default_room(
+    room_id: int,
+    room: DefaultRoomCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: DBUser = Depends(require_permission("inventory", "update"))
+):
+    result = await db.execute(select(DefaultRoom).where(DefaultRoom.id == room_id))
+    db_room = result.scalar()
+    if not db_room:
+        raise HTTPException(status_code=404, detail="Default room not found")
+    
+    for key, value in room.model_dump().items():
+        setattr(db_room, key, value)
+    
+    await db.commit()
+    await db.refresh(db_room)
+    return db_room
 
 
 @app.get("/defaults/items", response_model=List[DefaultItemResponse])
@@ -408,4 +428,32 @@ async def delete_default_item(
     await db.commit()
     return {"message": "Default item deleted"}
 
+@app.put("/items/{item_id}", response_model=ItemResponse)
+async def update_item_endpoint(
+    item_id: int,
+    item_update: ItemCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Update an existing inventory item.
+    Requires 'inventory' -> 'update' permission.
+    """
+    # Fetch the item
+    result = await db.execute(select(Item).where(Item.id == item_id))
+    db_item = result.scalar()
 
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # Update fields
+    for key, value in item_update.model_dump().items():
+        setattr(db_item, key, value)
+
+    # Update timestamp
+    db_item.updated = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(db_item)
+
+    return db_item
