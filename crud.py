@@ -163,7 +163,7 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
 
         room_responses.append({
             "id": room.id,
-            "room_name": room.name,
+            "room_name": room.room_name,
             "room_type": room.room_type,
             "items": item_responses
         })
