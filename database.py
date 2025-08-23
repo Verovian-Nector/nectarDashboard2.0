@@ -165,6 +165,7 @@ class Item(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc)
+        quantity = Column(Integer, default=1)
     )
 
     # Relationship
