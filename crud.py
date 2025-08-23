@@ -103,23 +103,42 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
         await db.commit()
         await db.refresh(db_property)
 
-    # 3. Get all default rooms
+    # 3. Create inventory for the property
+    inventory = Inventory(
+        property_id=db_property.id,
+        property_name=db_property.title
+    )
+    db.add(inventory)
+    await db.commit()
+    await db.refresh(inventory)
+
+    # 4. Get all default rooms
     result = await db.execute(select(DefaultRoom).order_by(DefaultRoom.order))
     default_rooms = result.scalars().all()
 
+    # List to store room responses
+    room_responses = []
+
     for default_room in default_rooms:
-        # 4. Create room
-        room = Room(inventory_id=inventory.id, room_name=default_room.room_name)
+        # 5. Create room
+        room = Room(
+            inventory_id=inventory.id,
+            room_name=default_room.room_name,
+            room_type=default_room.room_type  # if you have this field
+        )
         db.add(room)
         await db.commit()
         await db.refresh(room)
 
-        # 5. Get all default items for this room
+        # 6. Get all default items for this room
         result = await db.execute(
-            select(DefaultItem).where(DefaultItem.room_name == default_room.room_name).order_by(DefaultItem.order)
+            select(DefaultItem)
+            .where(DefaultItem.room_name == default_room.room_name)
+            .order_by(DefaultItem.order)
         )
         default_items = result.scalars().all()
 
+        item_responses = []
         for item in default_items:
             db_item = Item(
                 room_id=room.id,
@@ -129,29 +148,61 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
                 condition=item.condition,
                 owner=item.owner,
                 notes=item.notes,
-                photos=item.photos
+                photos=item.photos,
+                item_type=item.item_type  # if you have this field
             )
             db.add(db_item)
+            await db.commit()
+            await db.refresh(db_item)
 
-    await db.commit()
+            # Build item response
+            item_responses.append({
+                "id": db_item.id,
+                "name": db_item.name,
+                "brand": db_item.brand,
+                "value": db_item.value,
+                "condition": db_item.condition,
+                "owner": db_item.owner,
+                "notes": db_item.notes,
+                "photos": db_item.photos,
+                "item_type": db_item.item_type,
+                "room_id": db_item.room_id,
+                "created_at": db_item.created_at,
+                "updated_at": db_item.updated_at
+            })
+
+        # Build room response
+        room_responses.append({
+            "id": room.id,
+            "room_name": room.room_name,
+            "room_type": room.room_type,
+            "items": item_responses
+        })
+
+    # 7. Return plain dict response
     return {
-    "id": db_property.id,
-    "title": db_property.title,
-    "address": db_property.address,
-    "description":db_property.description,
-    "owner_id": db_property.owner_id,
-    "inspections": db_property.inspections,
-    "created_at": db_property.created_at,
-    "updated_at": db_property.updated_at,
-    "inventory": [
-        {
-        "id": inventory.id,
-        "property_id": inventory.property_id,
-        "property_name": inventory.property_name,
-        "rooms": []
-        }
-    ]
-}
+        "id": db_property.id,
+        "title": db_property.title,
+        "address": db_property.address,
+        "description": db_property.description,
+        "owner_id": db_property.owner_id,
+        "tenant_info": db_property.tenant_info,
+        "financial_info": db_property.financial_info,
+        "maintenance_records": db_property.maintenance_records,
+        "documents": db_property.documents,
+        "inspections": db_property.inspections,
+        "acf": db_property.acf,
+        "created_at": db_property.created_at,
+        "updated_at": db_property.updated_at,
+        "inventory": [
+            {
+                "id": inventory.id,
+                "property_id": inventory.property_id,
+                "property_name": inventory.property_name,
+                "rooms": room_responses
+            }
+        ]
+    }
 
 
 async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
