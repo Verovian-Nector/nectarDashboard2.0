@@ -137,6 +137,7 @@ class Room(Base):
     id = Column(Integer, primary_key=True, index=True)
     inventory_id = Column(Integer, ForeignKey("inventories.id"), nullable=False)
     room_name = Column(String, nullable=False)
+    room_type = Column(String)
 
     # Relationship
     inventory = relationship("Inventory", back_populates="rooms")
