@@ -257,7 +257,7 @@ class PaymentResponse(PaymentBase):
         from_attributes = True
 
 
-# --- Inventory / Rooms / Items ---
+# --- Inventory / Rooms / Items ---------
 class ItemBase(BaseModel):
     name: str
     brand: Optional[str] = None
