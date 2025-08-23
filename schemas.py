@@ -172,7 +172,12 @@ class ProfileGroup(BaseModel):
     incoming_payment_frequency: Optional[str] = None
     outgoing_price: Optional[Union[int, float]] = None
     outgoing_payment_frequency: Optional[str] = None
-
+    incoming_type: Optional[str] = None
+    outgoing_type: Optional[str] = None
+    incoming_date: Optional[datetime] = None
+    outgoing_date: Optional[datetime] = None
+    property_status: Optional[str] = None
+    categories: Optional[str] = None
 
 # Gallery
 # Use Union for flexible gallery_photos (can be list, bool, or dict)
