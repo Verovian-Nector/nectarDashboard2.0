@@ -275,8 +275,8 @@ class ItemCreate(ItemBase):
 
 class ItemResponse(ItemBase):
     id: int
-    created: datetime
-    updated: datetime
+    created: Optional[datetime] = None
+    updated: Optional[datetime] = None
 
     class Config:
         from_attributes = True
