@@ -39,7 +39,7 @@ from sqlalchemy import select
 from typing import List
 from datetime import datetime, timezone
 
-from database import engine, get_db, Base, DBUser, DBProperty
+from database import engine, get_db, Base, DBUser, DBProperty, DefaultItem, DefaultRoom
 from crud import (
     get_user,
     create_user,
