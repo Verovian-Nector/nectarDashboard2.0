@@ -103,7 +103,7 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
         await db.commit()
         await db.refresh(db_property)
 
-    # 3. Create inventory for the property
+    # 3. Create inventory
     inventory = Inventory(
         property_id=db_property.id,
         property_name=db_property.title
@@ -112,74 +112,114 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
     await db.commit()
     await db.refresh(inventory)
 
-    # 4. Get all default rooms
-    result = await db.execute(select(DefaultRoom).order_by(DefaultRoom.order))
-    default_rooms = result.scalars().all()
+    # 4. Extract profilegroup values
+    acf = db_property.acf or {}
+    profilegroup = acf.get("profilegroup", {})
 
-    # List to store room responses
+    # Default counts (fallback to 1 if not specified)
+    bed_count = max(1, int(profilegroup.get("beds", 1)))
+    bath_count = max(1, int(profilegroup.get("bathrooms", 1)))
+    living_count = max(1, int(profilegroup.get("living_rooms", 1)))
+    parking_count = max(1, int(profilegroup.get("parking", 1)))
+
+    # 5. Define default rooms and their item templates
+    default_room_items = {
+        "Bedroom": [
+            {"name": "Bed", "brand": "IKEA", "value": 500, "condition": "New", "owner": "Landlord"},
+            {"name": "Sheets", "brand": "CottonCo", "value": 50, "condition": "New", "owner": "Landlord"}
+        ],
+        "Bathroom": [],
+        "Living Room": [],
+        "Parking": []
+    }
+
+    # 6. Create rooms and items
     room_responses = []
 
-    for default_room in default_rooms:
-        # 5. Create room
-        room = Room(
-            inventory_id=inventory.id,
-            room_name=default_room.room_name,
-            room_type=default_room.room_type  # if you have this field
-        )
+    for i in range(bed_count):
+        room_name = f"Bedroom {i + 1}"
+        room = Room(inventory_id=inventory.id, room_name=room_name, room_type="Bedroom")
         db.add(room)
         await db.commit()
         await db.refresh(room)
 
-        # 6. Get all default items for this room
-        result = await db.execute(
-            select(DefaultItem)
-            .where(DefaultItem.room_name == default_room.room_name)
-            .order_by(DefaultItem.order)
-        )
-        default_items = result.scalars().all()
-
         item_responses = []
-        for item in default_items:
-            db_item = Item(
-                room_id=room.id,
-                name=item.name,
-                brand=item.brand,
-                value=item.value,
-                condition=item.condition,
-                owner=item.owner,
-                notes=item.notes,
-                photos=item.photos,
-                item_type=item.item_type  # if you have this field
-            )
-            db.add(db_item)
+        for item_data in default_room_items["Bedroom"]:
+            item = Item(room_id=room.id, **item_data)
+            db.add(item)
             await db.commit()
-            await db.refresh(db_item)
-
-            # Build item response
+            await db.refresh(item)
             item_responses.append({
-                "id": db_item.id,
-                "name": db_item.name,
-                "brand": db_item.brand,
-                "value": db_item.value,
-                "condition": db_item.condition,
-                "owner": db_item.owner,
-                "notes": db_item.notes,
-                "photos": db_item.photos,
-                "item_type": db_item.item_type,
-                "room_id": db_item.room_id,
-                "created_at": db_item.created_at,
-                "updated_at": db_item.updated_at
+                "id": item.id,
+                "name": item.name,
+                "brand": item.brand,
+                "value": item.value,
+                "condition": item.condition,
+                "owner": item.owner,
+                "notes": item.notes,
+                "photos": item.photos,
+                "room_id": item.room_id
             })
 
-        # Build room response
         room_responses.append({
             "id": room.id,
-            "room_name": room.room_name,
+            "room_name": room.name,
             "room_type": room.room_type,
             "items": item_responses
         })
 
-    # 7. Return plain dict response
+    # Create Bathrooms
+    for i in range(bath_count):
+        room = Room(
+            inventory_id=inventory.id,
+            room_name=f"Bathroom {i + 1}",
+            room_type="Bathroom"
+        )
+        db.add(room)
+        await db.commit()
+        await db.refresh(room)
+        room_responses.append({
+            "id": room.id,
+            "room_name": room.name,
+            "room_type": room.room_type,
+            "items": []
+        })
+
+    # Create Living Rooms
+    for i in range(living_count):
+        room = Room(
+            inventory_id=inventory.id,
+            room_name=f"Living Room {i + 1}",
+            room_type="Living Room"
+        )
+        db.add(room)
+        await db.commit()
+        await db.refresh(room)
+        room_responses.append({
+            "id": room.id,
+            "room_name": room.name,
+            "room_type": room.room_type,
+            "items": []
+        })
+
+    # Create Parking
+    for i in range(parking_count):
+        room = Room(
+            inventory_id=inventory.id,
+            room_name=f"Parking Space {i + 1}",
+            room_type="Parking"
+        )
+        db.add(room)
+        await db.commit()
+        await db.refresh(room)
+        room_responses.append({
+            "id": room.id,
+            "room_name": room.name,
+            "room_type": room.room_type,
+            "items": []
+        })
+
+    # 7. Return full response
     return {
         "id": db_property.id,
         "title": db_property.title,
