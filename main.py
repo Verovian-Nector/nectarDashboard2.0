@@ -338,8 +338,9 @@ async def get_default_rooms(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("inventory", "read"))
 ):
-    result = await db.execute(select(DefaultRoom).order_by(order))
-    return result.scalars().all()
+    result = await db.execute(select(DefaultRoom).order_by(DefaultRoom.order))  # ✅ Fixed
+    default_rooms = result.scalars().all()
+    return default_rooms
 
 
 @app.post("/defaults/rooms", response_model=DefaultRoomResponse)
@@ -361,12 +362,12 @@ async def delete_default_room(
     current_user: DBUser = Depends(require_permission("inventory", "delete")),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(DefaultRoom).where(id == room_id))
+    result = await db.execute(select(DefaultRoom).where(DefaultRoom.id == room_id))
     room = result.scalar()
     if not room:
         raise HTTPException(status_code=404, detail="Default room not found")
     
-    await db.execute(delete(DefaultRoom).where(id == room_id))
+    await db.execute(delete(DefaultRoom).where(DefaultRoom.id == room_id))
     await db.commit()
     return {"message": "Default room deleted"}
     
@@ -378,7 +379,7 @@ async def update_default_room(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("inventory", "update"))
 ):
-    result = await db.execute(select(DefaultRoom).where(id == room_id))
+    result = await db.execute(select(DefaultRoom).where(DefaultRoom.id == room_id))
     db_room = result.scalar()
     if not db_room:
         raise HTTPException(status_code=404, detail="Default room not found")
@@ -419,12 +420,12 @@ async def delete_default_item(
     current_user: DBUser = Depends(require_permission("inventory", "delete")),
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(DefaultItem).where(id == item_id))
+    result = await db.execute(select(DefaultItem).where(DefaultItem.id == item_id))
     item = result.scalar()
     if not item:
         raise HTTPException(status_code=404, detail="Default item not found")
     
-    await db.execute(delete(DefaultItem).where(id == item_id))
+    await db.execute(delete(DefaultItem).where(DefaultItem.id == item_id))
     await db.commit()
     return {"message": "Default item deleted"}
 
