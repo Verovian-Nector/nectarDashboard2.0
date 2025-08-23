@@ -338,7 +338,7 @@ class PropertyResponse(BaseModel):
     id: int
     title: str
     address: str
-    description: str
+    description: Optional[str] = None
     owner_id: int
     tenant_info: Optional[Dict[Any, Any]] = None
     financial_info: Optional[Dict[Any, Any]] = None
