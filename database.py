@@ -164,7 +164,7 @@ class Item(Base):
     updated = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc)
+        onupdate=lambda: datetime.now(timezone.utc),
         quantity = Column(Integer, default=1)
     )
 
