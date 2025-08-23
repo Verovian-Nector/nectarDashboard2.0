@@ -72,7 +72,7 @@ async def get_property(db: AsyncSession, property_id: int):
                     {
                         "id": item.id,
                         "name": item.name,
-                        "item_type": item.item_type,
+
                         "quantity": item.quantity,
                         "notes": item.notes,
                         "room_id": item.room_id
@@ -290,7 +290,7 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
                                 {
                                     "id": item.id,
                                     "name": item.name,
-                                    "item_type": item.item_type,
+                                    
                                     "quantity": item.quantity,
                                     "notes": item.notes,
                                     "room_id": item.room_id
