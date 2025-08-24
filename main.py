@@ -332,23 +332,7 @@ async def update_inventory_endpoint(
 ):
     result = await update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
     return result
-    
 
-@app.get("/rooms/{room_id}", response_model=RoomResponse)
-async def get_room(
-    room_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: DBUser = Depends(require_permission("inventory", "read"))
-):
-    result = await db.execute(
-        select(Room)
-        .options(selectinload(Room.items))
-        .where(Room.id == room_id)
-    )
-    room = result.scalar()
-    if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
-    return room
     
     
 
@@ -393,19 +377,31 @@ async def add_room_to_inventory(
 @app.put("/rooms/{room_id}", response_model=RoomResponse)
 async def update_room(
     room_id: int,
-    room_update: RoomBase,  # Only allows updating room_name
+    room_update: RoomBase,
     current_user: DBUser = Depends(require_permission("inventory", "update")),
     db: AsyncSession = Depends(get_db)
 ):
+    # Find and update the room
     result = await db.execute(select(Room).where(Room.id == room_id))
-    room = result.scalar()
-    if not room:
+    db_room = result.scalar()
+    if not db_room:
         raise HTTPException(status_code=404, detail="Room not found")
 
-    room.room_name = room_update.room_name
+    db_room.room_name = room_update.room_name
     await db.commit()
-    await db.refresh(room)
-    return room
+    await db.refresh(db_room)
+
+    # ❌ Don't return db_room directly — items will fail to load!
+
+    # ✅ Re-fetch room with items eagerly loaded
+    result = await db.execute(
+        select(Room)
+        .options(selectinload(Room.items))
+        .where(Room.id == room_id)
+    )
+    room_with_items = result.scalar()
+
+    return room_with_items
     
     
 @app.delete("/rooms/{room_id}")
@@ -422,6 +418,23 @@ async def delete_room(
     await db.delete(room)
     await db.commit()
     return {"status": "deleted"}
+    
+    
+@app.get("/rooms/{room_id}", response_model=RoomResponse)
+async def get_room(
+    room_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: DBUser = Depends(require_permission("inventory", "read"))
+):
+    result = await db.execute(
+        select(Room)
+        .options(selectinload(Room.items))
+        .where(Room.id == room_id)
+    )
+    room = result.scalar()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return room
     
     
 @app.post("/rooms/{room_id}/items", response_model=ItemResponse)
