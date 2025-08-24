@@ -202,7 +202,12 @@ async def read_properties(
     # 📄 Pagination
     query = query.offset(skip).limit(limit)
 
-    result = await db.execute(query)
+    result = await db.execute(
+    select(DBProperty)
+    .options(selectinload(DBProperty.inventory))  # ✅ Load inventories now
+    .offset(skip)
+    .limit(limit)
+)
     properties = result.scalars().all()
     return properties
     
