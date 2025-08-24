@@ -331,6 +331,128 @@ async def update_inventory_endpoint(
     result = await update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
     return result
     
+    
+@app.post("/inventory/{inventory_id}/rooms", response_model=RoomResponse)
+async def add_room_to_inventory(
+    inventory_id: int,
+    room_data: RoomCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "create")),
+    db: AsyncSession = Depends(get_db)
+):
+    # Verify inventory exists
+    result = await db.execute(select(Inventory).where(Inventory.id == inventory_id))
+    inventory = result.scalar()
+    if not inventory:
+        raise HTTPException(status_code=404, detail="Inventory not found")
+
+    # Create room
+    room = Room(inventory_id=inventory_id, room_name=room_data.room_name)
+    db.add(room)
+    await db.commit()
+    await db.refresh(room)
+
+    # Add items if provided
+    for item_data in room_data.items:
+        item = Item(room_id=room.id, **item_data.model_dump())
+        db.add(item)
+    await db.commit()
+
+    # Return full room with items
+    return room
+    
+    
+@app.put("/rooms/{room_id}", response_model=RoomResponse)
+async def update_room(
+    room_id: int,
+    room_update: RoomBase,  # Only allows updating room_name
+    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Room).where(Room.id == room_id))
+    room = result.scalar()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    room.room_name = room_update.room_name
+    await db.commit()
+    await db.refresh(room)
+    return room
+    
+    
+@app.delete("/rooms/{room_id}")
+async def delete_room(
+    room_id: int,
+    current_user: DBUser = Depends(require_permission("inventory", "delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Room).where(Room.id == room_id))
+    room = result.scalar()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    await db.delete(room)
+    await db.commit()
+    return {"status": "deleted"}
+    
+    
+@app.post("/rooms/{room_id}/items", response_model=ItemResponse)
+async def add_item_to_room(
+    room_id: int,
+    item_data: ItemCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "create")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Room).where(Room.id == room_id))
+    room = result.scalar()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    item = Item(room_id=room_id, **item_data.model_dump())
+    db.add(item)
+    await db.commit()
+    await db.refresh(item)
+    return item
+    
+    
+@app.put("/items/{item_id}", response_model=ItemResponse)
+async def update_item(
+    item_id: int,
+    item_update: ItemCreate,
+    current_user: DBUser = Depends(require_permission("inventory", "update")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Item).where(Item.id == item_id))
+    item = result.scalar()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    for key, value in item_update.model_dump().items():
+        setattr(item, key, value)
+    item.updated = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(item)
+    return item
+    
+    
+@app.delete("/items/{item_id}")
+async def delete_item(
+    item_id: int,
+    current_user: DBUser = Depends(require_permission("inventory", "delete")),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Item).where(Item.id == item_id))
+    item = result.scalar()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    await db.delete(item)
+    await db.commit()
+    return {"status": "deleted"}
+    
+    
+
+    
 # ==================== DEFAULT ENDPOINTS ====================
     
 @app.get("/defaults/rooms", response_model=List[DefaultRoomResponse])
