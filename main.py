@@ -35,7 +35,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import cast, String, Integer, func
+from sqlalchemy import cast, String, and_, Integer, func
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
@@ -172,15 +172,49 @@ async def read_properties(
 
     # 🔍 Filters
     if location:
-        query = query.where(func.lower(DBProperty.acf['profilegroup']['location'].astext) == func.lower(location))
+        loc_text = DBProperty.acf['profilegroup']['location'].astext
+        query = query.where(
+            and_(
+                loc_text.is_not(None),
+                func.lower(cast(loc_text, String)) == func.lower(location)
+            )
+        )
+
     if beds is not None:
-        query = query.where(cast(DBProperty.acf['profilegroup']['beds'].astext, Integer) >= beds)
+        beds_text = DBProperty.acf['profilegroup']['beds'].astext
+        query = query.where(
+            and_(
+                beds_text.is_not(None),
+                cast(beds_text, Integer) >= beds
+            )
+        )
+
     if bathrooms is not None:
-        query = query.where(cast(DBProperty.acf['profilegroup']['bathrooms'].astext, Integer) >= bathrooms)
+        baths_text = DBProperty.acf['profilegroup']['bathrooms'].astext
+        query = query.where(
+            and_(
+                baths_text.is_not(None),
+                cast(baths_text, Integer) >= bathrooms
+            )
+        )
+
     if property_type:
-        query = query.where(DBProperty.acf['profilegroup']['property_type'].astext == property_type)
+        type_text = DBProperty.acf['profilegroup']['property_type'].astext
+        query = query.where(
+            and_(
+                type_text.is_not(None),
+                func.lower(cast(type_text, String)) == func.lower(property_type)
+            )
+        )
+
     if status:
-        query = query.where(DBProperty.acf['profilegroup']['property_status'].astext == status)
+        status_text = DBProperty.acf['profilegroup']['property_status'].astext
+        query = query.where(
+            and_(
+                status_text.is_not(None),
+                func.lower(cast(status_text, String)) == func.lower(status)
+            )
+        )
 
     # 📊 Sort
     if sort_by:
@@ -213,6 +247,7 @@ async def read_properties(
     result = await db.execute(query)
     properties = result.scalars().all()
     return properties
+    
     
     
 @app.get("/properties/{property_id}", response_model=PropertyResponse)
