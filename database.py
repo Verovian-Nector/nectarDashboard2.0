@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import JSONB
 from config import settings
 from datetime import datetime, timezone
 
@@ -54,7 +55,7 @@ class DBProperty(Base):
     inspections = Column(JSON)  # ← Legacy field (can be deprecated)
 
     # NEW: Store full ACF object
-    acf = Column(JSON)  # Will hold inspection_group, financial_group, etc.
+    acf = Column(JSONB, nullable=True)  # Will hold inspection_group, financial_group, etc.
 
     created_at = Column(
     DateTime(timezone=True),

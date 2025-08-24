@@ -167,73 +167,38 @@ async def read_properties(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("properties", "read"))
 ):
-    # Start base query
     query = select(DBProperty)
 
     # 🔍 Filters
     if location:
-        loc_text = DBProperty.acf['profilegroup']['location'].astext
+        loc_path = DBProperty.acf['profilegroup']['location']
+        loc_text = cast(loc_path, String)
         query = query.where(
             and_(
-                loc_text.is_not(None),
-                func.lower(cast(loc_text, String)) == func.lower(location)
+                loc_path.is_not(None),
+                func.lower(loc_text) == func.lower(location)
             )
         )
 
     if beds is not None:
-        beds_text = DBProperty.acf['profilegroup']['beds'].astext
+        beds_path = DBProperty.acf['profilegroup']['beds']
+        beds_val = cast(beds_path, Integer)
         query = query.where(
             and_(
-                beds_text.is_not(None),
-                cast(beds_text, Integer) >= beds
+                beds_path.is_not(None),
+                beds_val >= beds
             )
         )
 
-    if bathrooms is not None:
-        baths_text = DBProperty.acf['profilegroup']['bathrooms'].astext
-        query = query.where(
-            and_(
-                baths_text.is_not(None),
-                cast(baths_text, Integer) >= bathrooms
-            )
-        )
+    # 📊 Sort (example)
+    if sort_by == "location":
+        loc_path = DBProperty.acf['profilegroup']['location']
+        sort_col = func.lower(cast(loc_path, String))
+        if order == "desc":
+            sort_col = sort_col.desc()
+        query = query.order_by(sort_col)
 
-    if property_type:
-        type_text = DBProperty.acf['profilegroup']['property_type'].astext
-        query = query.where(
-            and_(
-                type_text.is_not(None),
-                func.lower(cast(type_text, String)) == func.lower(property_type)
-            )
-        )
-
-    if status:
-        status_text = DBProperty.acf['profilegroup']['property_status'].astext
-        query = query.where(
-            and_(
-                status_text.is_not(None),
-                func.lower(cast(status_text, String)) == func.lower(status)
-            )
-        )
-
-    # 📊 Sort
-    if sort_by:
-        sort_col = None
-        if sort_by == "created":
-            sort_col = DBProperty.created_at
-        elif sort_by == "title":
-            sort_col = DBProperty.title
-        elif sort_by == "location":
-            sort_col = func.lower(DBProperty.acf['profilegroup']['location'].astext)
-        elif sort_by == "beds":
-            sort_col = cast(DBProperty.acf['profilegroup']['beds'].astext, Integer)
-
-        if sort_col:
-            if order == "desc":
-                sort_col = sort_col.desc()
-            query = query.order_by(sort_col)
-
-    # ✅ Eager loading
+    # ✅ Eager load nested data
     query = query.options(
         selectinload(DBProperty.inventory)
         .selectinload(Inventory.rooms)
@@ -243,7 +208,6 @@ async def read_properties(
     # 📄 Pagination
     query = query.offset(skip).limit(limit)
 
-    # ✅ Execute final query
     result = await db.execute(query)
     properties = result.scalars().all()
     return properties
