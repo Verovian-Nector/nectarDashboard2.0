@@ -37,6 +37,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from typing import List
 from datetime import datetime, timezone
 
@@ -332,7 +333,25 @@ async def update_inventory_endpoint(
     result = await update_inventory_with_rooms(db, inventory_id, inventory.model_dump())
     return result
     
+
+@app.get("/rooms/{room_id}", response_model=RoomResponse)
+async def get_room(
+    room_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: DBUser = Depends(require_permission("inventory", "read"))
+):
+    result = await db.execute(
+        select(Room)
+        .options(selectinload(Room.items))
+        .where(Room.id == room_id)
+    )
+    room = result.scalar()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return room
     
+    
+
 @app.post("/inventory/{inventory_id}/rooms", response_model=RoomResponse)
 async def add_room_to_inventory(
     inventory_id: int,
@@ -341,7 +360,9 @@ async def add_room_to_inventory(
     db: AsyncSession = Depends(get_db)
 ):
     # Verify inventory exists
-    result = await db.execute(select(Inventory).where(Inventory.id == inventory_id))
+    result = await db.execute(
+        select(Inventory).where(Inventory.id == inventory_id)
+    )
     inventory = result.scalar()
     if not inventory:
         raise HTTPException(status_code=404, detail="Inventory not found")
@@ -358,8 +379,15 @@ async def add_room_to_inventory(
         db.add(item)
     await db.commit()
 
-    # Return full room with items
-    return room
+    # Re-fetch room with items eagerly loaded
+    result = await db.execute(
+        select(Room)
+        .options(selectinload(Room.items))  # ✅ Load items now
+        .where(Room.id == room.id)
+    )
+    room_with_items = result.scalar()
+
+    return room_with_items
     
     
 @app.put("/rooms/{room_id}", response_model=RoomResponse)
