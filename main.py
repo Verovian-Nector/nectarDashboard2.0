@@ -17,6 +17,7 @@ from schemas import (
     ItemCreate,
     ItemResponse,
     RoomCreate,
+    RoomBase,
     RoomResponse,
     DefaultRoomResponse,
     DefaultRoomCreate,
