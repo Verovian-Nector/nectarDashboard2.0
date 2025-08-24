@@ -28,7 +28,6 @@ from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -36,9 +35,10 @@ from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import cast, String, Integer, func
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timezone
 
 from database import engine, get_db, Base, DBUser, DBProperty, DefaultItem, DefaultRoom, Inventory, Room, Item
@@ -158,7 +158,7 @@ async def read_properties(
     skip: int = 0,
     limit: int = 100,
     sort_by: Optional[str] = None,
-    order: Optional[str] = "asc",  # "asc" or "desc"
+    order: Optional[str] = "asc",
     location: Optional[str] = None,
     beds: Optional[int] = None,
     bathrooms: Optional[int] = None,
@@ -167,15 +167,15 @@ async def read_properties(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("properties", "read"))
 ):
+    # Start base query
     query = select(DBProperty)
 
     # 🔍 Filters
     if location:
-        if 'acf' in DBProperty.__table__.columns:
-            query = query.where(DBProperty.acf['profilegroup']['location'].astext == location)
-    if beds:
+        query = query.where(func.lower(DBProperty.acf['profilegroup']['location'].astext) == func.lower(location))
+    if beds is not None:
         query = query.where(cast(DBProperty.acf['profilegroup']['beds'].astext, Integer) >= beds)
-    if bathrooms:
+    if bathrooms is not None:
         query = query.where(cast(DBProperty.acf['profilegroup']['bathrooms'].astext, Integer) >= bathrooms)
     if property_type:
         query = query.where(DBProperty.acf['profilegroup']['property_type'].astext == property_type)
@@ -189,9 +189,9 @@ async def read_properties(
             sort_col = DBProperty.created_at
         elif sort_by == "title":
             sort_col = DBProperty.title
-        elif sort_by == "location" and 'acf' in DBProperty.__table__.columns:
-            sort_col = DBProperty.acf['profilegroup']['location'].astext
-        elif sort_by == "beds" and 'acf' in DBProperty.__table__.columns:
+        elif sort_by == "location":
+            sort_col = func.lower(DBProperty.acf['profilegroup']['location'].astext)
+        elif sort_by == "beds":
             sort_col = cast(DBProperty.acf['profilegroup']['beds'].astext, Integer)
 
         if sort_col:
@@ -199,15 +199,18 @@ async def read_properties(
                 sort_col = sort_col.desc()
             query = query.order_by(sort_col)
 
+    # ✅ Eager loading
+    query = query.options(
+        selectinload(DBProperty.inventory)
+        .selectinload(Inventory.rooms)
+        .selectinload(Room.items)
+    )
+
     # 📄 Pagination
     query = query.offset(skip).limit(limit)
 
-    result = await db.execute(
-    select(DBProperty)
-    .options(selectinload(DBProperty.inventory))  # ✅ Load inventories now
-    .offset(skip)
-    .limit(limit)
-)
+    # ✅ Execute final query
+    result = await db.execute(query)
     properties = result.scalars().all()
     return properties
     
