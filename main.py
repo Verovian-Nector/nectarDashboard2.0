@@ -157,10 +157,54 @@ async def read_current_user(
 async def read_properties(
     skip: int = 0,
     limit: int = 100,
+    sort_by: Optional[str] = None,
+    order: Optional[str] = "asc",  # "asc" or "desc"
+    location: Optional[str] = None,
+    beds: Optional[int] = None,
+    bathrooms: Optional[int] = None,
+    property_type: Optional[str] = None,
+    status: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: DBUser = Depends(get_current_user)
+    current_user: DBUser = Depends(require_permission("properties", "read"))
 ):
-    return await get_properties(db, skip=skip, limit=limit)
+    query = select(DBProperty)
+
+    # 🔍 Filters
+    if location:
+        if 'acf' in DBProperty.__table__.columns:
+            query = query.where(DBProperty.acf['profilegroup']['location'].astext == location)
+    if beds:
+        query = query.where(cast(DBProperty.acf['profilegroup']['beds'].astext, Integer) >= beds)
+    if bathrooms:
+        query = query.where(cast(DBProperty.acf['profilegroup']['bathrooms'].astext, Integer) >= bathrooms)
+    if property_type:
+        query = query.where(DBProperty.acf['profilegroup']['property_type'].astext == property_type)
+    if status:
+        query = query.where(DBProperty.acf['profilegroup']['property_status'].astext == status)
+
+    # 📊 Sort
+    if sort_by:
+        sort_col = None
+        if sort_by == "created":
+            sort_col = DBProperty.created_at
+        elif sort_by == "title":
+            sort_col = DBProperty.title
+        elif sort_by == "location" and 'acf' in DBProperty.__table__.columns:
+            sort_col = DBProperty.acf['profilegroup']['location'].astext
+        elif sort_by == "beds" and 'acf' in DBProperty.__table__.columns:
+            sort_col = cast(DBProperty.acf['profilegroup']['beds'].astext, Integer)
+
+        if sort_col:
+            if order == "desc":
+                sort_col = sort_col.desc()
+            query = query.order_by(sort_col)
+
+    # 📄 Pagination
+    query = query.offset(skip).limit(limit)
+
+    result = await db.execute(query)
+    properties = result.scalars().all()
+    return properties
     
     
 @app.get("/properties/{property_id}", response_model=PropertyResponse)
