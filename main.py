@@ -40,7 +40,7 @@ from sqlalchemy import select
 from typing import List
 from datetime import datetime, timezone
 
-from database import engine, get_db, Base, DBUser, DBProperty, DefaultItem, DefaultRoom
+from database import engine, get_db, Base, DBUser, DBProperty, DefaultItem, DefaultRoom, Inventory, Room, Item
 from crud import (
     get_user,
     create_user,
