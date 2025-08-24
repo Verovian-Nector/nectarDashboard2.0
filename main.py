@@ -171,17 +171,15 @@ async def read_properties(
 
     # 🔍 Filters
     if location:
-        print(f"🔍 Filtering by location: {location}")
-        loc_path = DBProperty.acf['profilegroup']['location']
-        loc_text = cast(loc_path, String)
-        print(f"SQL Filter: LOWER({loc_text}::TEXT) = LOWER('{location}')")
-
+        print(f"🔍 Filtering by location: '{location}'")
+        loc_col = DBProperty.acf['profilegroup']['location'].astext
         query = query.where(
             and_(
-                loc_path.is_not(None),
-                func.lower(loc_text) == func.lower(location)
+                loc_col.is_not(None),
+                func.trim(func.lower(loc_col)) == func.trim(func.lower(location))
             )
         )
+        print("✅ Location filter applied")
 
     if beds is not None:
         beds_path = DBProperty.acf['profilegroup']['beds']
