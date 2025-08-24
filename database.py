@@ -128,7 +128,7 @@ class Inventory(Base):
 
     # Relationships
     property = relationship("DBProperty", back_populates="inventory")
-    rooms = relationship("Room", back_populates="inventory", cascade="all, delete-orphan")
+    rooms = relationship("Room", back_populates="inventory", cascade="all, delete-orphan", lazy="selectin")
 
 
 class Room(Base):

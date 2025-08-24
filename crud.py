@@ -58,32 +58,35 @@ async def get_property(db: AsyncSession, property_id: int):
         "acf": property_obj.acf,
         "created_at": property_obj.created_at,
         "updated_at": property_obj.updated_at,
-        "inventory": [
-    {
-        "id": property_obj.inventory.id,
-        "property_id": property_obj.inventory.property_id,
-        "property_name": property_obj.inventory.property_name,
-        "rooms": [
-            {
-                "id": room.id,
-                "room_name": room.room_name,
-                "room_type": room.room_type,
-                "items": [
-                    {
-                        "id": item.id,
-                        "name": item.name,
-
-                        "quantity": item.quantity,
-                        "notes": item.notes,
-                        "room_id": item.room_id
-                    }
-                    for item in room.items
-                ]
-            }
-            for room in property_obj.inventory.rooms
-        ]
-    }
-] if property_obj.inventory else []
+        "inventory": {
+            "id": property_obj.inventory.id,
+            "property_id": property_obj.inventory.property_id,
+            "property_name": property_obj.inventory.property_name,
+            "rooms": [
+                {
+                    "id": room.id,
+                    "room_name": room.room_name,
+                    "room_type": room.room_type,
+                    "items": [
+                        {
+                            "id": item.id,
+                            "name": item.name,
+                            "brand": item.brand,
+                            "purchase_date": item.purchase_date,
+                            "value": item.value,
+                            "condition": item.condition,
+                            "owner": item.owner,
+                            "notes": item.notes,
+                            "photos": item.photos,
+                            "created": item.created,
+                            "updated": item.updated
+                        }
+                        for item in room.items
+                    ]
+                }
+                for room in property_obj.inventory.rooms
+            ]
+        } if property_obj.inventory else None
     }
 
 
