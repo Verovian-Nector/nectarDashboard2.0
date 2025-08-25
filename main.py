@@ -192,16 +192,16 @@ async def read_properties(
         )
 
     # 📊 Sort (example)
-    if sort_by:
-        sort_col = None
-        if sort_by == "created":
-            sort_col = DBProperty.created_at
-        elif sort_by == "title":
-            sort_col = DBProperty.title
-        elif sort_by == "location":
-            sort_col = func.lower(DBProperty.acf['profilegroup']['location'].astext)
-        elif sort_by == "beds":
-            sort_col = cast(DBProperty.acf['profilegroup']['beds'].astext, Integer)
+    if sort_by == "created":
+        sort_col = DBProperty.created_at
+    elif sort_by == "title":
+        sort_col = DBProperty.title
+    elif sort_by == "location":
+        loc_path = DBProperty.acf['profilegroup']['location'].astext
+        sort_col = func.lower(func.trim(loc_path))
+    elif sort_by == "beds":
+        beds_path = DBProperty.acf['profilegroup']['beds'].astext
+        sort_col = cast(beds_path, Integer)
 
     if sort_col:
         if order == "desc":
