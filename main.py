@@ -167,6 +167,13 @@ async def read_properties(
     db: AsyncSession = Depends(get_db),
     current_user: DBUser = Depends(require_permission("properties", "read"))
 ):
+
+    # Normalize order
+    order = order.lower()
+    if order not in ("asc", "desc"):
+        order = "asc"
+        
+        
     query = select(DBProperty)
 
     # 🔍 Filters
@@ -192,21 +199,24 @@ async def read_properties(
         )
 
     # 📊 Sort (example)
-    if sort_by == "created":
-        sort_col = DBProperty.created_at
-    elif sort_by == "title":
-        sort_col = DBProperty.title
-    elif sort_by == "location":
-        loc_path = DBProperty.acf['profilegroup']['location'].astext
-        sort_col = func.lower(func.trim(loc_path))
-    elif sort_by == "beds":
-        beds_path = DBProperty.acf['profilegroup']['beds'].astext
-        sort_col = cast(beds_path, Integer)
+    if sort_by:
+        sort_col = None
+        if sort_by == "created":
+            sort_col = DBProperty.created_at
+        elif sort_by == "title":
+            sort_col = DBProperty.title
+        elif sort_by == "location":
+            loc_path = DBProperty.acf['profilegroup']['location'].astext
+            sort_col = func.lower(func.trim(loc_path))
+        elif sort_by == "beds":
+            beds_path = DBProperty.acf['profilegroup']['beds'].astext
+            sort_col = cast(beds_path, Integer)
 
-    if sort_col:
-        if order == "desc":
-            sort_col = sort_col.desc()
-        query = query.order_by(sort_col)
+        # ✅ Only check if sort_col was set, not its SQL value
+        if sort_col is not None:
+            if order == "desc":
+                sort_col = sort_col.desc()
+            query = query.order_by(sort_col)
 
     # ✅ Eager load nested data
     query = query.options(
