@@ -178,6 +178,8 @@ class ProfileGroup(BaseModel):
     outgoing_date: Optional[datetime] = None
     property_status: Optional[str] = None
     categories: Optional[str] = None
+    region: Optional[str] = None
+    listed: Optional[bool] = None
 
 # Gallery
 # Use Union for flexible gallery_photos (can be list, bool, or dict)
