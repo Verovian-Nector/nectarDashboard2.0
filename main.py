@@ -696,41 +696,41 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 @app.post("/upload")
 async def upload_files(
-    files: List[UploadFile] = File(...),
-    file_urls: List[str] = Form(None)  # Accept data URLs
+    files: List[UploadFile] = File(None),           # Real file uploads
+    file_data_urls: Optional[List[str]] = Form(None)  # data: URLs from FlutterFlow
 ):
     base_url = "https://dashboard.nectarestates.com"
     uploaded_urls = []
 
-    # Handle real file uploads
-    for file in files:
-        if file.filename is None or file.size == 0:
-            continue
-
-        ext = Path(file.filename).suffix or ".bin"
-        safe_name = f"{uuid.uuid4().hex}{ext}"
-        file_path = UPLOAD_DIR / safe_name
-
-        with open(file_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
-
-        file_url = f"{base_url}/uploads/{safe_name}"
-        uploaded_urls.append(file_url)
-
-    # Handle data URLs (from FlutterFlow web)
-    if file_urls:
-        for data_url in file_urls:
-            if not data_url.startswith("data:"):
+    # Handle real file uploads (mobile/native)
+    if files:
+        for file in files:
+            if file.filename is None or file.size == 0:
                 continue
 
-            # Extract content type and base64 data
+            ext = Path(file.filename).suffix or ".bin"
+            safe_name = f"{uuid.uuid4().hex}{ext}"
+            file_path = UPLOAD_DIR / safe_name
+
+            with open(file_path, "wb") as f:
+                content = await file.read()
+                f.write(content)
+
+            uploaded_urls.append(f"{base_url}/uploads/{safe_name}")
+
+    # Handle data URLs (FlutterFlow web)
+    if file_data_urls:
+        for data_url in file_data_urls:
+            if not data_url or not data_url.startswith(""):
+                continue
+
+            # Extract MIME type and base64 data
             match = re.match(r"data:(?P<type>[^;]+);base64,(?P<data>.+)", data_url)
             if not match:
                 continue
 
-            mime_type = match.group("type")  # e.g., image/jpeg
-            base64_data = match.group("data")
+            mime_type = match.group("type")
+            base64_str = match.group("data")
 
             # Guess extension
             ext = ".bin"
@@ -744,10 +744,14 @@ async def upload_files(
             safe_name = f"{uuid.uuid4().hex}{ext}"
             file_path = UPLOAD_DIR / safe_name
 
-            with open(file_path, "wb") as f:
-                f.write(base64.b64decode(base64_data))
+            try:
+                with open(file_path, "wb") as f:
+                    f.write(base64.b64decode(base64_str))
+                uploaded_urls.append(f"{base_url}/uploads/{safe_name}")
+            except Exception as e:
+                continue  # Skip invalid data
 
-            file_url = f"{base_url}/uploads/{safe_name}"
-            uploaded_urls.append(file_url)
+    if not uploaded_urls:
+        raise HTTPException(status_code=400, detail="No valid files or data URLs provided")
 
     return {"urls": uploaded_urls}
