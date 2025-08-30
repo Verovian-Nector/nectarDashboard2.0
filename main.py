@@ -709,24 +709,26 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 @app.post("/upload")
 async def upload_files(files: List[UploadFile] = File(...)):
-    base_url = "https://dashboard.nectarestates.com"  # ✅ Replace with your domain
+    base_url = "https://dashboard.nectarestates.com"
     uploaded_urls = []
 
     for file in files:
-        # Optional: Limit file types
-        allowed = ["image/jpeg", "image/png", "image/gif", "application/pdf"]
+        # Optional: Validate file type
+        allowed = ["image/jpeg", "image/png", "application/pdf"]
         if file.content_type not in allowed:
-            raise HTTPException(400, f"Unsupported file type: {file.filename}")
+            raise HTTPException(400, f"Unsupported type: {file.filename}")
 
-        # Save file
-        file_path = UPLOAD_DIR / file.filename
-        with open(file_path, "wb") as buffer:
+        # ✅ Sanitize filename: remove spaces, special chars
+        ext = Path(file.filename).suffix
+        safe_name = f"{uuid4().hex}{ext}"  # Prevent duplicates and spaces
+
+        file_path = Path("uploads") / safe_name
+        with open(file_path, "wb") as f:
             content = await file.read()
-            buffer.write(content)
-        await file.seek(0)
+            f.write(content)
 
-        # Generate public URL
-        file_url = f"{base_url}/uploads/{file.filename}"
+        # ✅ Build clean URL (no trailing spaces!)
+        file_url = f"{base_url}/uploads/{safe_name}"
         uploaded_urls.append(file_url)
 
     return {"urls": uploaded_urls}
