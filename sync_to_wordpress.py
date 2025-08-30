@@ -1,39 +1,56 @@
-# sync_to_wordpress.py
 import os
 import asyncio
 import httpx
 import logging
-import requests
 from datetime import datetime
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv  # Make sure python-dotenv is installed
+
+# Load environment variables
+load_dotenv()
 
 # ==================== Configuration ====================
-WORDPRESS_SITE_URL = "https://nectarestates.com"  # ✅ No spaces
-WP_API_ENDPOINT = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/properties"  # ✅ 'properties' (plural), not 'property'
+WORDPRESS_SITE_URL = "https://nectarestates.com"
+WP_API_ENDPOINT = f"{WORDPRESS_SITE_URL}/wp-json/wp/v2/properties"  # CPT: 'properties' (plural)
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
 if not WP_USERNAME or not WP_APP_PASSWORD:
-    raise ValueError("WP_USERNAME and WP_APP_PASSWORD must be set in environment")
+    raise ValueError("WP_USERNAME and WP_APP_PASSWORD must be set in the .env file")
 
-# Optional: Map FastAPI roles to WordPress roles
-ROLE_TO_WP_CAPABILITY = {
-    "propertyadmin": "administrator",
-    "propertymanager": "propertyManager",
-    "propertyowner": "propertyOwner",
-    "blogger": "editor"
-}
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler("wordpress_sync.log"), logging.StreamHandler()]
-)
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# ==================== Prepare ACF Data ====================
+def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract and format ACF fields for WordPress.
+    Handles nested groups like 'profilegroup', 'financial_group', etc.
+    """
+    acf = property_data.get("acf") or {}
+    flat_acf = {}
 
-# ==================== Sync Functions ====================
+    # Flatten known ACF groups
+    if "profilegroup" in acf:
+        profile = acf["profilegroup"]
+        flat_acf.update({
+            "location": profile.get("location"),
+            "beds": profile.get("beds"),
+            "bathrooms": profile.get("bathrooms"),
+            "property_type": profile.get("property_type"),
+            "property_status": profile.get("property_status"),
+            "furnished": profile.get("furnished"),
+            "parking": profile.get("parking"),
+            "living_rooms": profile.get("living_rooms"),
+            "region": profile.get("region"),
+            "listed": profile.get("listed")
+        })
+
+    # Add more groups as needed (e.g., financial_group, inspection_group)
+    return flat_acf
+
+# ==================== Sync to WordPress ====================
 async def sync_property_to_wordpress(
     property_data: Dict[str, Any],
     action: str = "create"  # "create" or "update"
@@ -66,89 +83,52 @@ async def sync_property_to_wordpress(
                 url=url,
                 auth=auth,
                 json=payload,
-                headers={
-                    "User-Agent": "NectarApp-Sync/1.0",
-                    "Content-Type": "application/json"
-                }
+                headers={"User-Agent": "NectarApp/1.0"}
             )
 
-            if response.status_code in [200, 201]:
+            if response.status_code in (200, 201, 200):  # 200 for update, 201 for create
                 result = response.json()
-                logger.info(f"✅ {action.title()}d property '{property_data['title']}' to WordPress (ID: {result['id']})")
+                logger.info(f"✅ Successfully synced property to WordPress: {result.get('id')}")
                 return result
             else:
-                logger.error(f"❌ {action.title()} failed: {response.status_code} - {response.text}")
+                logger.error(f"❌ WordPress API Error [{response.status_code}]: {response.text}")
                 return None
 
         except Exception as e:
-            logger.error(f"💥 Sync failed: {str(e)}")
+            logger.error(f"❌ Failed to sync property to WordPress: {e}")
             return None
 
-
-def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert FastAPI ACF structure to WordPress ACF format
-    """
-    acf = property_data.get("acf", {}) or {}
-
-    return {
-        "profile_management": acf.get("profile_management", {}),
-        "profilegroup": acf.get("profilegroup", {}),
-        "gallery_photos": acf.get("gallery_photos"),
-        "tenants_group": acf.get("tenants_group", {}),
-        "financial_group": acf.get("financial_group", {}),
-        "mainenance_group": acf.get("mainenance_group", {}),
-        "documents_group": acf.get("documents_group", {}),
-        "inventory_group": acf.get("inventory_group", {}),
-        "inspection_group": acf.get("inspection_group", {})
-    }
-
-
-async def sync_user_to_wordpress(user_data: Dict[str, Any]):
-    """
-    Optional: Sync user roles to WordPress (if needed)
-    """
-    capability = ROLE_TO_WP_CAPABILITY.get(user_data.get("role"))
-    if not capability:
-        return
-
-    payload = {
-        "role": capability
-    }
-
-    # This would require a plugin like "User Sync" or custom endpoint
-    # For now, just log
-    logger.info(f"🔄 User role sync: {user_data['username']} → {capability}")
-
-
-# ==================== Usage in FastAPI ====================
-# Call this from your CRUD functions
+# ==================== Event Hooks ====================
 async def on_property_created(property_db_obj):
-    print(f"🔄 Syncing property to WordPress: {property_db_obj.title}")
-    logger.info(f"🔄 Starting sync for: {property_db_obj.title}")
     """
     Call this after creating a property in FastAPI
     """
+    logger.info(f"🔄 Syncing new property to WordPress: {property_db_obj.title}")
+
     property_data = {
         "id": property_db_obj.id,
         "title": property_db_obj.title,
         "address": property_db_obj.address,
-        "acf": property_db_obj.acf,
-        "wordpress_id": None  # Will be set after sync
+        "description": property_db_obj.description,
+        "acf": property_db_obj.acf or {}
     }
 
     result = await sync_property_to_wordpress(property_data, "create")
-    if result:
-        # Save WordPress ID back to your DB (optional)
-        property_db_obj.wordpress_id = result["id"]
-        # await db.commit()
 
+    if result:
+        # Optional: Save WordPress ID back to your DB
+        property_db_obj.wordpress_id = result["id"]
+        # await db.commit() → Do this in your CRUD function if you store wordpress_id
+        logger.info(f"✅ WordPress post created with ID: {result['id']}")
+    else:
+        logger.warning(f"⚠️ Failed to create WordPress post for: {property_db_obj.title}")
 
 async def on_property_updated(property_db_obj):
     """
     Call this after updating a property in FastAPI
     """
-    # Assume you store wordpress_id in your DB
+    logger.info(f"🔄 Updating property on WordPress: {property_db_obj.title}")
+
     if not getattr(property_db_obj, "wordpress_id", None):
         await on_property_created(property_db_obj)
         return
@@ -157,8 +137,14 @@ async def on_property_updated(property_db_obj):
         "id": property_db_obj.id,
         "title": property_db_obj.title,
         "address": property_db_obj.address,
-        "acf": property_db_obj.acf,
+        "description": property_db_obj.description,
+        "acf": property_db_obj.acf or {},
         "wordpress_id": property_db_obj.wordpress_id
     }
 
-    await sync_property_to_wordpress(property_data, "update")
+    result = await sync_property_to_wordpress(property_data, "update")
+
+    if result:
+        logger.info(f"✅ WordPress post updated: {result['id']}")
+    else:
+        logger.warning(f"⚠️ Failed to update WordPress post: {property_db_obj.wordpress_id}")

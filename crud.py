@@ -392,6 +392,13 @@ async def create_inventory_with_rooms(db: AsyncSession, inventory_data: dict):
             db.add(item)
 
     await db.commit()
+    
+    try:
+        # Run sync in background
+        asyncio.create_task(on_property_created(db_property))
+    except Exception as e:
+        # Log error (optional)
+        print(f"Failed to trigger WordPress sync: {e}")
     return inventory
     
     
