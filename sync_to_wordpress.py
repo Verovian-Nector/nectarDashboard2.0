@@ -3,6 +3,7 @@ import os
 import asyncio
 import httpx
 import logging
+import requests
 from datetime import datetime
 from typing import Dict, Any, Optional
 
