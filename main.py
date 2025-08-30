@@ -46,6 +46,12 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import os
 from typing import List
+import re
+import base64
+from fastapi import UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
+from pathlib import Path
+import uuid
 
 from database import engine, get_db, Base, DBUser, DBProperty, DefaultItem, DefaultRoom, Inventory, Room, Item
 from crud import (
@@ -704,31 +710,60 @@ async def update_item_endpoint(
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# Serve static files
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 @app.post("/upload")
-async def upload_files(files: List[UploadFile] = File(...)):
+async def upload_files(
+    files: List[UploadFile] = File(...),
+    file_urls: List[str] = Form(None)  # Accept data URLs
+):
     base_url = "https://dashboard.nectarestates.com"
     uploaded_urls = []
 
+    # Handle real file uploads
     for file in files:
-        # Optional: Validate file type
-        allowed = ["image/jpeg", "image/png", "application/pdf"]
-        if file.content_type not in allowed:
-            raise HTTPException(400, f"Unsupported type: {file.filename}")
+        if file.filename is None or file.size == 0:
+            continue
 
-        # ✅ Sanitize filename: remove spaces, special chars
-        ext = Path(file.filename).suffix
-        safe_name = f"{uuid4().hex}{ext}"  # Prevent duplicates and spaces
+        ext = Path(file.filename).suffix or ".bin"
+        safe_name = f"{uuid.uuid4().hex}{ext}"
+        file_path = UPLOAD_DIR / safe_name
 
-        file_path = Path("uploads") / safe_name
         with open(file_path, "wb") as f:
             content = await file.read()
             f.write(content)
 
-        # ✅ Build clean URL (no trailing spaces!)
         file_url = f"{base_url}/uploads/{safe_name}"
         uploaded_urls.append(file_url)
+
+    # Handle data URLs (from FlutterFlow web)
+    if file_urls:
+        for data_url in file_urls:
+            if not data_url.startswith("data:"):
+                continue
+
+            # Extract content type and base64 data
+            match = re.match(r"data:(?P<type>[^;]+);base64,(?P<data>.+)", data_url)
+            if not match:
+                continue
+
+            mime_type = match.group("type")  # e.g., image/jpeg
+            base64_data = match.group("data")
+
+            # Guess extension
+            ext = ".bin"
+            if "image/jpeg" in mime_type:
+                ext = ".jpg"
+            elif "image/png" in mime_type:
+                ext = ".png"
+            elif "application/pdf" in mime_type:
+                ext = ".pdf"
+
+            safe_name = f"{uuid.uuid4().hex}{ext}"
+            file_path = UPLOAD_DIR / safe_name
+
+            with open(file_path, "wb") as f:
+                f.write(base64.b64decode(base64_data))
+
+            file_url = f"{base_url}/uploads/{safe_name}"
+            uploaded_urls.append(file_url)
 
     return {"urls": uploaded_urls}
