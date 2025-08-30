@@ -40,6 +40,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from datetime import datetime, timezone
+from fastapi import UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+import os
+from typing import List
 
 from database import engine, get_db, Base, DBUser, DBProperty, DefaultItem, DefaultRoom, Inventory, Room, Item
 from crud import (
@@ -693,3 +699,34 @@ async def update_item_endpoint(
     await db.refresh(db_item)
 
     return db_item
+
+
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+# Serve static files
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+@app.post("/upload")
+async def upload_files(files: List[UploadFile] = File(...)):
+    base_url = "https://dashboard.nectarestates.com"  # ✅ Replace with your domain
+    uploaded_urls = []
+
+    for file in files:
+        # Optional: Limit file types
+        allowed = ["image/jpeg", "image/png", "image/gif", "application/pdf"]
+        if file.content_type not in allowed:
+            raise HTTPException(400, f"Unsupported file type: {file.filename}")
+
+        # Save file
+        file_path = UPLOAD_DIR / file.filename
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        await file.seek(0)
+
+        # Generate public URL
+        file_url = f"{base_url}/uploads/{file.filename}"
+        uploaded_urls.append(file_url)
+
+    return {"urls": uploaded_urls}
