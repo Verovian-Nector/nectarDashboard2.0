@@ -696,13 +696,17 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 @app.post("/upload")
 async def upload_files(
-    files: List[UploadFile] = File(None),           # Real file uploads
-    file_data_urls: Optional[List[str]] = Form(None)  # data: URLs from FlutterFlow
+    files: List[UploadFile] = File(None),
+    file_data_urls: Optional[List[str]] = Form(None)
 ):
     base_url = "https://dashboard.nectarestates.com"
     uploaded_urls = []
 
-    # Handle real file uploads (mobile/native)
+    # 🔍 Debug: Print what was received
+    print(f"Received files: {[f.filename for f in files if f]}")
+    print(f"Received data URLs: {file_data_urls}")
+
+    # Handle real file uploads
     if files:
         for file in files:
             if file.filename is None or file.size == 0:
@@ -718,21 +722,21 @@ async def upload_files(
 
             uploaded_urls.append(f"{base_url}/uploads/{safe_name}")
 
-    # Handle data URLs (FlutterFlow web)
+    # Handle data URLs
     if file_data_urls:
         for data_url in file_data_urls:
             if not data_url or not data_url.startswith(""):
+                print(f"Skipping invalid data URL: {data_url}")
                 continue
 
-            # Extract MIME type and base64 data
-            match = re.match(r"data:(?P<type>[^;]+);base64,(?P<data>.+)", data_url)
+            match = re.match(r"(?P<type>[^;]+);base64,(?P<data>.+)", data_url)
             if not match:
+                print(f"Invalid data URL format: {data_url}")
                 continue
 
             mime_type = match.group("type")
             base64_str = match.group("data")
 
-            # Guess extension
             ext = ".bin"
             if "image/jpeg" in mime_type:
                 ext = ".jpg"
@@ -749,9 +753,20 @@ async def upload_files(
                     f.write(base64.b64decode(base64_str))
                 uploaded_urls.append(f"{base_url}/uploads/{safe_name}")
             except Exception as e:
-                continue  # Skip invalid data
+                print(f"Failed to decode data URL: {e}")
+                continue
 
+    # 🔁 Return debug info in dev
     if not uploaded_urls:
-        raise HTTPException(status_code=400, detail="No valid files or data URLs provided")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "No valid files or data URLs provided",
+                "received": {
+                    "file_count": len([f for f in files if f]) if files else 0,
+                    "data_urls": file_data_urls
+                }
+            }
+        )
 
     return {"urls": uploaded_urls}
