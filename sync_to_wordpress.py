@@ -25,30 +25,35 @@ logger = logging.getLogger(__name__)
 # ==================== Prepare ACF Data ====================
 def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Extract and format ACF fields for WordPress.
-    Handles nested groups like 'profilegroup', 'financial_group', etc.
+    Flatten ACF data into key-value pairs that match ACF field names or keys.
     """
     acf = property_data.get("acf") or {}
-    flat_acf = {}
+    flat = {}
 
-    # Flatten known ACF groups
-    if "profilegroup" in acf:
-        profile = acf["profilegroup"]
-        flat_acf.update({
-            "location": profile.get("location"),
-            "beds": profile.get("beds"),
-            "bathrooms": profile.get("bathrooms"),
-            "property_type": profile.get("property_type"),
-            "property_status": profile.get("property_status"),
-            "furnished": profile.get("furnished"),
-            "parking": profile.get("parking"),
-            "living_rooms": profile.get("living_rooms"),
-            "region": profile.get("region"),
-            "listed": profile.get("listed")
-        })
+    # Extract profilegroup
+    profilegroup = acf.get("profilegroup") or {}
+    flat.update({
+        "location": profilegroup.get("location"),
+        "beds": profilegroup.get("beds"),
+        "bathrooms": profilegroup.get("bathrooms"),
+        "property_type": profilegroup.get("property_type"),
+        "property_status": profilegroup.get("property_status"),
+        "furnished": profilegroup.get("furnished"),
+        "parking": profilegroup.get("parking"),
+        "living_rooms": profilegroup.get("living_rooms"),
+        "region": profilegroup.get("region"),
+        "listed": profilegroup.get("listed")
+    })
 
-    # Add more groups as needed (e.g., financial_group, inspection_group)
-    return flat_acf
+    # Add other groups as needed
+    financial = acf.get("financial_group") or {}
+    flat.update({
+        "incoming_price": financial.get("incoming_price"),
+        "outgoing_price": financial.get("outgoing_price")
+    })
+
+    # Remove None values
+    return {k: v for k, v in flat.items() if v is not None}
 
 # ==================== Sync to WordPress ====================
 async def sync_property_to_wordpress(
