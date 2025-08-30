@@ -47,7 +47,7 @@ def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
     furnished_map = {
         "Furnished": "Furnished",
         "UnFurnished": "Unfurnished",
-        "PartFurnished": "Part-furnished"
+        "SemiFurnished": "SemiFurnished"
     }
 
     return {
