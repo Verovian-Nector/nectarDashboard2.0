@@ -1,4 +1,18 @@
-# main.py
+import os
+import re
+import base64
+import uuid
+from fastapi import FastAPI, Depends, HTTPException, status, Query, Form, UploadFile, File, Security
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import cast, String, and_, Integer, func,select
+from sqlalchemy.orm import selectinload
+from typing import Optional, List, Dict, Any
+from datetime import datetime, timezone
+from pathlib import Path
 from schemas import (
     UserCreate,
     UserResponse,
@@ -24,35 +38,6 @@ from schemas import (
     DefaultItemResponse,
     DefaultItemCreate,
 )
-from fastapi import FastAPI, Depends, HTTPException, status, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List, Dict, Any
-from datetime import datetime
-
-from fastapi import FastAPI, Depends, HTTPException, status, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import cast, String, and_, Integer, func
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from typing import List, Optional
-from datetime import datetime, timezone
-from fastapi import UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-import os
-from typing import List
-import re
-import base64
-from fastapi import UploadFile, File, HTTPException
-from fastapi.responses import JSONResponse
-from pathlib import Path
-import uuid
-
 from database import engine, get_db, Base, DBUser, DBProperty, DefaultItem, DefaultRoom, Inventory, Room, Item
 from crud import (
     get_user,
@@ -69,7 +54,6 @@ from crud import (
     get_inventory,
     update_inventory_with_rooms,
 )
-
 from auth import authenticate_user, create_access_token, get_current_user
 from dependencies import require_permission  # ✅ Add this
 from security import get_password_hash
