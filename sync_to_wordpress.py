@@ -153,3 +153,11 @@ async def on_property_updated(property_db_obj):
         logger.info(f"✅ WordPress post updated: {result['id']}")
     else:
         logger.warning(f"⚠️ Failed to update WordPress post: {property_db_obj.wordpress_id}")
+        
+payload = {
+    "title": property_data.get("title", "Untitled"),
+    "status": "publish",
+    "acf": prepare_acf_data(property_data)
+}
+
+logger.info(f"📤 Sending to WordPress: {payload}")
