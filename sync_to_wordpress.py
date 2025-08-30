@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ==================== Prepare ACF Data ====================
-def prepare_acf_data(property_ Dict[str, Any]) -> Dict[str, Any]:
+def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
     acf = property_data.get("acf") or {}
     profilegroup = acf.get("profilegroup") or {}
 
