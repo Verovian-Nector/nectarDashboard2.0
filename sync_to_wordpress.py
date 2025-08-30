@@ -23,37 +23,48 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ==================== Prepare ACF Data ====================
-def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Flatten ACF data into key-value pairs that match ACF field names or keys.
-    """
+def prepare_acf_data(property_ Dict[str, Any]) -> Dict[str, Any]:
     acf = property_data.get("acf") or {}
-    flat = {}
-
-    # Extract profilegroup
     profilegroup = acf.get("profilegroup") or {}
-    flat.update({
-        "location": profilegroup.get("location"),
-        "beds": profilegroup.get("beds"),
-        "bathrooms": profilegroup.get("bathrooms"),
-        "property_type": profilegroup.get("property_type"),
-        "property_status": profilegroup.get("property_status"),
-        "furnished": profilegroup.get("furnished"),
-        "parking": profilegroup.get("parking"),
-        "living_rooms": profilegroup.get("living_rooms"),
-        "region": profilegroup.get("region"),
-        "listed": profilegroup.get("listed")
-    })
 
-    # Add other groups as needed
-    financial = acf.get("financial_group") or {}
-    flat.update({
-        "incoming_price": financial.get("incoming_price"),
-        "outgoing_price": financial.get("outgoing_price")
-    })
+    # Map values to match WordPress allowed options
+    property_type_map = {
+        "Detached": "Detached House",
+        "SemiDetached": "Semi detached",
+        "Terraced": "Terraced",
+        "Maisonette": "Maisonette",
+        "Flat": "Flat",
+        "Apartment": "Apartment",
+        "Bungalow": "Bungalow",
+        "Townhouse": "Townhouse",
+        "TwoLandings": "Two landings",
+        "Office": "Office",
+        "Restaurant": "Restaurant",
+        "Warehouse": "Warehouse",
+        "Retail": "Retail"
+    }
 
-    # Remove None values
-    return {k: v for k, v in flat.items() if v is not None}
+    furnished_map = {
+        "Furnished": "Furnished",
+        "UnFurnished": "Unfurnished",
+        "PartFurnished": "Part-furnished"
+    }
+
+    return {
+        "profilegroup": {
+            "postcode": profilegroup.get("postcode"),
+            "price": profilegroup.get("incoming_price") or profilegroup.get("price"),
+            "payment_frequency": profilegroup.get("incoming_payment_frequency"),
+            "house_number": profilegroup.get("house_number"),
+            "location": profilegroup.get("location"),
+            "beds": profilegroup.get("beds"),
+            "bathrooms": profilegroup.get("bathrooms"),
+            "living_rooms": profilegroup.get("living_rooms"),
+            "parking": profilegroup.get("parking"),
+            "furnished": furnished_map.get(profilegroup.get("furnished"), profilegroup.get("furnished")),
+            "property_type": property_type_map.get(profilegroup.get("property_type"), profilegroup.get("property_type"))
+        }
+    }
 
 # ==================== Sync to WordPress ====================
 async def sync_property_to_wordpress(
