@@ -58,22 +58,33 @@ def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
 # ==================== Sync to WordPress ====================
 async def sync_property_to_wordpress(
     property_data: Dict[str, Any],
-    action: str = "create"  # "create" or "update"
+    action: str = "create"
 ) -> Optional[Dict[str, Any]]:
     """
     Sync a property to WordPress as a custom post type 'properties'
     """
-    # Prepare payload
+    # ✅ DEBUG: Log the full payload before sending
+    logger.info(f"📤 Preparing to sync property: {property_data.get('title')}")
+    logger.info(f"📝 Payload to WordPress: {property_data}")
+
+    # Prepare ACF data
+    acf_payload = prepare_acf_data(property_data)
+    logger.info(f"🧩 Prepared ACF data: {acf_payload}")  # ✅ DEBUG ACF structure
+
+    # Prepare main payload
     payload = {
         "title": property_data.get("title", "Untitled Property"),
         "status": "publish",
         "content": property_data.get("address", ""),
-        "acf": prepare_acf_data(property_data)
+        "acf": acf_payload
     }
 
     # Add ID if updating
     if action == "update" and property_data.get("wordpress_id"):
         payload["id"] = property_data["wordpress_id"]
+
+    # ✅ DEBUG: Final payload
+    logger.info(f"🚀 Sending to WordPress: {payload}")
 
     # Set up auth
     auth = (WP_USERNAME, WP_APP_PASSWORD)
@@ -83,24 +94,34 @@ async def sync_property_to_wordpress(
             method = "PUT" if action == "update" and property_data.get("wordpress_id") else "POST"
             url = f"{WP_API_ENDPOINT}/{property_data['wordpress_id']}" if method == "PUT" else WP_API_ENDPOINT
 
+            # ✅ DEBUG: Log request details
+            logger.info(f"📡 {method} request to: {url}")
+
             response = await client.request(
                 method=method,
                 url=url,
                 auth=auth,
                 json=payload,
-                headers={"User-Agent": "NectarApp/1.0"}
+                headers={
+                    "User-Agent": "NectarApp-Sync/1.0",
+                    "Content-Type": "application/json"
+                }
             )
 
-            if response.status_code in (200, 201, 200):  # 200 for update, 201 for create
+            # ✅ DEBUG: Log response
+            logger.info(f"📨 WordPress Response [{response.status_code}]: {response.text}")
+
+            if response.status_code in [200, 201]:
                 result = response.json()
-                logger.info(f"✅ Successfully synced property to WordPress: {result.get('id')}")
+                logger.info(f"✅ {action.title()}d property '{property_data['title']}' to WordPress (ID: {result['id']})")
                 return result
             else:
-                logger.error(f"❌ WordPress API Error [{response.status_code}]: {response.text}")
+                logger.error(f"❌ {action.title()} failed: {response.status_code} - {response.text}")
                 return None
 
         except Exception as e:
-            logger.error(f"❌ Failed to sync property to WordPress: {e}")
+            # ✅ DEBUG: Catch any exception
+            logger.error(f"💥 Sync failed with exception: {str(e)}", exc_info=True)
             return None
 
 # ==================== Event Hooks ====================
@@ -154,10 +175,3 @@ async def on_property_updated(property_db_obj):
     else:
         logger.warning(f"⚠️ Failed to update WordPress post: {property_db_obj.wordpress_id}")
         
-payload = {
-    "title": property_data.get("title", "Untitled"),
-    "status": "publish",
-    "acf": prepare_acf_data(property_data)
-}
-
-logger.info(f"📤 Sending to WordPress: {payload}")
