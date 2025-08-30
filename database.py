@@ -7,6 +7,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import JSONB
 from config import settings
 from datetime import datetime, timezone
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+async def on_property_created(property):
+    logger.info(f"Syncing property to WordPress: {property.title}")
+    # ... rest of logic
+
 
 # Async engine
 engine = create_async_engine(settings.DATABASE_URL, echo=True)

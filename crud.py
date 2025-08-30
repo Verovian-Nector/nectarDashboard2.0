@@ -221,6 +221,14 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
             "room_type": room.room_type,
             "items": []
         })
+    
+    # 2. ✅ Trigger sync to WordPress
+    try:
+        # Run sync in background
+        asyncio.create_task(on_property_created(db_property))
+    except Exception as e:
+        # Log error (optional)
+        print(f"Failed to trigger WordPress sync: {e}")
 
     # 7. Return full response
     return {
