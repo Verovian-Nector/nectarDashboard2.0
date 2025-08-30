@@ -234,12 +234,21 @@ async def read_properties(
 async def read_property(
     property_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: DBUser = Depends(get_current_user)
+    current_user: DBUser = Depends(require_permission("properties", "read"))
 ):
-    property = await get_property(db, property_id)
-    if not property:
+    result = await db.execute(
+        select(DBProperty)
+        .options(
+            selectinload(DBProperty.inventory)
+            .selectinload(Inventory.rooms)
+            .selectinload(Room.items)
+        )
+        .where(DBProperty.id == property_id)
+    )
+    property_obj = result.scalar()
+
+    if not property_obj:
         raise HTTPException(status_code=404, detail="Property not found")
-    return property
 
 
 @app.post("/properties", response_model=PropertyResponse)
