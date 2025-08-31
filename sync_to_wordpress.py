@@ -76,39 +76,34 @@ def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
 
 # ==================== Sync to WordPress ====================
 async def sync_property_to_wordpress(
-    property_data: Dict[str, Any],
+    property_ Dict[str, Any],
     action: str = "create"
 ) -> Optional[Dict[str, Any]]:
-    """
-    Sync a property to WordPress as a custom post type 'properties'
-    """
     # Prepare ACF data
     acf_payload = prepare_acf_data(property_data)
-    logger.info(f"🧩 Prepared ACF payload: {acf_payload}")
 
-    # ✅ Use "fields", not "acf"
+    # Map ACF categories to WordPress taxonomy IDs
+    category_name = acf_payload["profilegroup"].get("categories")
+    category_id = await get_category_id(category_name) if category_name else None
+
+    # Build payload
     payload = {
         "title": property_data.get("title", "Untitled Property"),
         "status": "publish",
         "content": property_data.get("address", ""),
-        # ✅ Change: "acf" → "fields"
-        "fields": acf_payload
+        "fields": acf_payload  # ← ACF to REST API plugin uses "fields"
     }
 
-    # Add ID if updating
-    if action == "update" and property_data.get("wordpress_id"):
-        payload["id"] = property_data["wordpress_id"]
+    # ✅ Add taxonomy category if found
+    if category_id:
+        payload["categories"] = [category_id]
 
     # Set up auth
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             method = "PUT" if action == "update" and property_data.get("wordpress_id") else "POST"
             url = f"{WP_API_ENDPOINT}/{property_data['wordpress_id']}" if method == "PUT" else WP_API_ENDPOINT
-
-            logger.info(f"🚀 {method} request to: {url}")
-            logger.info(f"📤 Sending payload: {payload}")
 
             response = await client.request(
                 method=method,
@@ -118,18 +113,16 @@ async def sync_property_to_wordpress(
                 headers={"User-Agent": "NectarApp-Sync/1.0"}
             )
 
-            logger.info(f"📨 WordPress Response [{response.status_code}]: {response.text}")
-
             if response.status_code in [200, 201]:
                 result = response.json()
-                logger.info(f"✅ {action.title()}d property '{property_data['title']}' to WordPress (ID: {result['id']})")
+                logger.info(f"✅ {action.title()}d property '{property_data['title']}' (ID: {result['id']})")
                 return result
             else:
                 logger.error(f"❌ {action.title()} failed: {response.status_code} - {response.text}")
                 return None
 
         except Exception as e:
-            logger.error(f"💥 Sync failed with exception: {str(e)}", exc_info=True)
+            logger.error(f"💥 Sync failed: {str(e)}", exc_info=True)
             return None
 
 # ==================== Event Hooks ====================
