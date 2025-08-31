@@ -49,6 +49,13 @@ def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
         "UnFurnished": "UnFurnished",
         "SemiFurnished": "SemiFurnished"
     }
+    
+    categories_map = {
+        "Lettings": "Lettings",
+        "Commercial": "Commercial",
+        "Short Lets": "Short Lets",
+        "Sales": "Sales"
+    }
 
     return {
         "profilegroup": {
@@ -62,7 +69,8 @@ def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
             "living_rooms": profilegroup.get("living_rooms"),
             "parking": profilegroup.get("parking"),
             "furnished": furnished_map.get(profilegroup.get("furnished"), profilegroup.get("furnished")),
-            "property_type": property_type_map.get(profilegroup.get("property_type"), profilegroup.get("property_type"))
+            "property_type": property_type_map.get(profilegroup.get("property_type"), profilegroup.get("property_type")),
+            "categories": categories_map.get(profilegroup.get("categories"), profilegroup.get("categories"))
         }
     }
 
