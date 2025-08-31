@@ -237,15 +237,17 @@ async def read_property(
     current_user: DBUser = Depends(require_permission("properties", "read"))
 ):
     result = await db.execute(
-        select(DBProperty)
-        .options(
-            selectinload(DBProperty.inventory)
-            .selectinload(Inventory.rooms)
-            .selectinload(Room.items)
+    select(DBProperty)
+    .options(
+        selectinload(DBProperty.inventory)
+        .selectinload(Inventory.rooms)
+        .selectinload(Room.items)
         )
         .where(DBProperty.id == property_id)
     )
-    property_obj = result.scalar()
+    property_obj = result.scalar()  # ✅ Ensures single object
+    
+    return PropertyResponse.model_validate(property_obj)
 
     if not property_obj:
         raise HTTPException(status_code=404, detail="Property not found")
