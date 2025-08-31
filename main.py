@@ -247,10 +247,11 @@ async def read_property(
     )
     property_obj = result.scalar()  # ✅ Ensures single object
     
-    return PropertyResponse.model_validate(property_obj)
 
     if not property_obj:
         raise HTTPException(status_code=404, detail="Property not found")
+        
+    return PropertyResponse.model_validate(property_obj)
 
 
 @app.post("/properties", response_model=PropertyResponse)
