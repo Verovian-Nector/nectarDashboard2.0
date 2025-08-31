@@ -68,7 +68,7 @@ def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
 
 # ==================== Sync to WordPress ====================
 async def sync_property_to_wordpress(
-    property_ Dict[str, Any],
+    property_data: Dict[str, Any],
     action: str = "create"
 ) -> Optional[Dict[str, Any]]:
     """
