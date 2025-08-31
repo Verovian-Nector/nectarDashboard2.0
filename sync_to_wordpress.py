@@ -76,7 +76,7 @@ def prepare_acf_data(property_data: Dict[str, Any]) -> Dict[str, Any]:
 
 # ==================== Sync to WordPress ====================
 async def sync_property_to_wordpress(
-    property_ Dict[str, Any],
+    property_data: Dict[str, Any],
     action: str = "create"
 ) -> Optional[Dict[str, Any]]:
     # Prepare ACF data
@@ -124,6 +124,33 @@ async def sync_property_to_wordpress(
         except Exception as e:
             logger.error(f"💥 Sync failed: {str(e)}", exc_info=True)
             return None
+            
+            
+# Cache category IDs to avoid repeated API calls
+CATEGORY_CACHE = {}
+
+async def get_category_id(category_name: str) -> Optional[int]:
+    if category_name in CATEGORY_CACHE:
+        return CATEGORY_CACHE[category_name]
+
+    url = "https://nectarestates.com/wp-json/wp/v2/categories"
+    params = {"search": category_name}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params)
+            if response.status_code == 200:
+                categories = response.json()
+                for cat in categories:
+                    if cat["name"].lower() == category_name.lower():
+                        CATEGORY_CACHE[category_name] = cat["id"]
+                        return cat["id"]
+    except Exception as e:
+        logger.error(f"❌ Failed to fetch category ID for '{category_name}': {e}")
+
+    # If not found, log and return None
+    logger.warning(f"⚠️ Category '{category_name}' not found in WordPress")
+    return None
 
 # ==================== Event Hooks ====================
 async def on_property_created(property_db_obj):
