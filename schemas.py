@@ -346,7 +346,7 @@ class PropertyUpdate(BaseModel):
 class PropertyResponse(BaseModel):
     id: int
     title: str
-    content: str
+    content: Optional[str] = None
     address: str
     description: Optional[str] = None
     owner_id: int
