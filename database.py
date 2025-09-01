@@ -49,6 +49,7 @@ class DBProperty(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
     address = Column(String, nullable=False)
     description = Column(String, nullable=False)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)

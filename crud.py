@@ -48,6 +48,7 @@ async def get_property(db: AsyncSession, property_id: int):
     return {
         "id": property_obj.id,
         "title": property_obj.title,
+        "content": property_obj.content,
         "address": property_obj.address,
         "owner_id": property_obj.owner_id,
         "tenant_info": property_obj.tenant_info,
@@ -234,6 +235,7 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
     return {
         "id": db_property.id,
         "title": db_property.title,
+        "content": db_property.content,
         "address": db_property.address,
         "description": db_property.description,
         "owner_id": db_property.owner_id,
@@ -277,6 +279,7 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
         {
             "id": prop.id,
             "title": prop.title,
+            "content": prop.content,
             "address": prop.address,
             "owner_id": prop.owner_id,
             "tenant_info": prop.tenant_info,

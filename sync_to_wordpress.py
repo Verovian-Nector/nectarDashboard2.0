@@ -90,7 +90,7 @@ async def sync_property_to_wordpress(
     payload = {
         "title": property_data.get("title", "Untitled Property"),
         "status": "publish",
-        "content": property_data.get("address", ""),
+        "content": property_data.get("content", ""),
         "fields": acf_payload  # ← ACF to REST API plugin uses "fields"
     }
 
@@ -162,6 +162,7 @@ async def on_property_created(property_db_obj):
     property_data = {
         "id": property_db_obj.id,
         "title": property_db_obj.title,
+        "content": property_db_obj.content,
         "address": property_db_obj.address,
         "description": property_db_obj.description,
         "acf": property_db_obj.acf or {}
@@ -190,6 +191,7 @@ async def on_property_updated(property_db_obj):
     property_data = {
         "id": property_db_obj.id,
         "title": property_db_obj.title,
+        "content": property_db_obj.content,
         "address": property_db_obj.address,
         "description": property_db_obj.description,
         "acf": property_db_obj.acf or {},

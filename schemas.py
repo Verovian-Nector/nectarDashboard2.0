@@ -325,6 +325,7 @@ class InventoryResponse(InventoryBase):
 # ==================== Property 
 class PropertyCreate(BaseModel):
     title: str
+    content: str
     address: str
     description: str
     acf: Optional[ACFUpdate] = None
@@ -335,6 +336,7 @@ class PropertyCreate(BaseModel):
         
 class PropertyUpdate(BaseModel):
     title: Optional[str] = None
+    content: Optional[str] = None
     address: Optional[str] = None
     description: Optional[str] = None
     owner_id: Optional[int] = None
@@ -344,6 +346,7 @@ class PropertyUpdate(BaseModel):
 class PropertyResponse(BaseModel):
     id: int
     title: str
+    content: str
     address: str
     description: Optional[str] = None
     owner_id: int
