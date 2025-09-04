@@ -5,6 +5,7 @@ import uuid
 from fastapi import FastAPI, Depends, HTTPException, status, Query, Form, UploadFile, File, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -87,6 +88,14 @@ async def startup():
 
 
 # ==================== AUTH ENDPOINTS ==========================
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(f"Validation Error: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()}
+    )
 
 @app.post("/token", response_model=Token)
 async def login(
