@@ -325,8 +325,8 @@ class InventoryResponse(InventoryBase):
 # ==================== Property 
 class PropertyCreate(BaseModel):
     title: str
-    content: str Optional[str] = None
-    address: str Optional[str] = None
+    content: Optional[str] = None
+    address: Optional[str] = None
     description: Optional[str] = None
     acf: Optional[ACFUpdate] = None
 
