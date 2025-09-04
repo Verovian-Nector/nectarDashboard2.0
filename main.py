@@ -5,7 +5,7 @@ import uuid
 from fastapi import FastAPI, Depends, HTTPException, status, Query, Form, UploadFile, File, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.exceptions import RequestValidationError
+from fastapi import Request, RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
