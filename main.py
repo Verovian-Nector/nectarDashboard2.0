@@ -86,7 +86,7 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
 
 
-# ==================== AUTH ENDPOINTS ====================
+# ==================== AUTH ENDPOINTS ==========================
 
 @app.post("/token", response_model=Token)
 async def login(
@@ -147,7 +147,7 @@ async def read_current_user(
 ):
     return current_user
 
-# ==================== PROPERTY ENDPOINTS ====================
+# ==================== PROPERTY ENDPOINTS ===============================================
 
 @app.get("/properties", response_model=List[PropertyResponse])
 async def read_properties(
