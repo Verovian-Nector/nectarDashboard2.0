@@ -290,31 +290,29 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
             "acf": prop.acf,
             "created_at": prop.created_at,
             "updated_at": prop.updated_at,
-            "inventory": 
+            "inventory": {
+            "id": prop.inventory.id,
+            "property_id": prop.inventory.property_id,
+            "property_name": prop.inventory.property_name,
+            "rooms": [
                 {
-                    "id": prop.inventory.id,
-                    "property_id": prop.inventory.property_id,
-                    "property_name": prop.inventory.property_name,
-                    "rooms": [
+                    "id": room.id,
+                    "room_name": room.room_name,
+                    "room_type": room.room_type,
+                    "items": [
                         {
-                            "id": room.id,
-                            "room_name": room.room_name,
-                            "room_type": room.room_type,
-                            "items": [
-                                {
-                                    "id": item.id,
-                                    "name": item.name,
-                                    
-                                    "quantity": item.quantity,
-                                    "notes": item.notes,
-                                    "room_id": item.room_id
-                                }
-                                for item in room.items
-                            ]
+                            "id": item.id,
+                            "name": item.name,
+                            "quantity": item.quantity,
+                            "notes": item.notes,
+                            "room_id": item.room_id
                         }
-                        for room in prop.inventory.rooms
+                        for item in room.items
+                    ]
                 }
-            ] if prop.inventory else []
+                for room in prop.inventory.rooms
+            ]
+        } if prop.inventory else None
         }
         for prop in properties
     ]
