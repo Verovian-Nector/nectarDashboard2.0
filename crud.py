@@ -247,14 +247,14 @@ async def create_property(db: AsyncSession, property: PropertyCreate, owner_id: 
         "acf": db_property.acf,
         "created_at": db_property.created_at,
         "updated_at": db_property.updated_at,
-        "inventory": [
+        "inventory": 
             {
                 "id": inventory.id,
                 "property_id": inventory.property_id,
                 "property_name": inventory.property_name,
                 "rooms": room_responses
             }
-        ]
+        
     }
 
 
@@ -290,7 +290,7 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
             "acf": prop.acf,
             "created_at": prop.created_at,
             "updated_at": prop.updated_at,
-            "inventory": [
+            "inventory": 
                 {
                     "id": prop.inventory.id,
                     "property_id": prop.inventory.property_id,
@@ -313,7 +313,6 @@ async def get_properties(db: AsyncSession, skip: int = 0, limit: int = 100):
                             ]
                         }
                         for room in prop.inventory.rooms
-                    ]
                 }
             ] if prop.inventory else []
         }

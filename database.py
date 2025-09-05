@@ -79,7 +79,7 @@ class DBProperty(Base):
     # Relationships
     events = relationship("Event", back_populates="property", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="property", cascade="all, delete-orphan")
-    inventory = relationship("Inventory", back_populates="property", uselist=False, cascade="all, delete-orphan", lazy="selectin")
+    inventory = relationship("Inventory", back_populates="property", uselist=False, cascade="all, delete-orphan")
 
     owner = relationship("DBUser", back_populates="properties")
     
