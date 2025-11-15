@@ -1,0 +1,57 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+      POSTGRES_DB: ${DB_NAME:-nectar}
+      POSTGRES_USER: ${DB_USER:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  child:
+    build: ./child
+    env_file: .env
+    networks: [internal]
+    ports:
+      - "8002:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - PARENT_URL=http://parent:8001
+      - SUBDOMAIN=child
+      - API_URL=http://child:8000
+  parent:
+    build: ./parent
+    networks: [internal]
+    ports:
+      - "8001:8001"
+  frontend:
+    build: frontend
+    networks: [internal]
+  parent-frontend:
+    build: ./parent/frontend
+    networks: [internal]
+    ports:
+      - "3000:80"
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /opt/ssl:/etc/nginx/ssl:ro
+    networks: [internal]
+    depends_on: [child, parent, frontend]
+volumes: { pgdata: }
+networks:
+  internal:
+    driver: bridge

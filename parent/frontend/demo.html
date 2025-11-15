@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard - Tenant Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #718096;
+            font-size: 1rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .table th {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .table th:first-child {
+            border-top-left-radius: 12px;
+        }
+        
+        .table th:last-child {
+            border-top-right-radius: 12px;
+        }
+        
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .table tr:hover {
+            background: rgba(66, 153, 225, 0.05);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.875rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+        
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .badge-active {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+        
+        .badge-inactive {
+            background: linear-gradient(135deg, #a0aec0, #718096);
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.875rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .form-help {
+            margin-top: 4px;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .mb-4 {
+            margin-bottom: 16px;
+        }
+        
+        .mb-6 {
+            margin-bottom: 24px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Parent Dashboard</h1>
+            <p>Manage your tenant instances with premium Mantine UI styling</p>
+        </div>
+        
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin: 0; color: #2d3748;">Tenant Management</h2>
+                <button class="btn">Create New Tenant</button>
+            </div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Subdomain</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Demo Tenant</strong></td>
+                        <td>demo.localhost:8000</td>
+                        <td><span class="badge badge-active">Active</span></td>
+                        <td>Nov 15, 2025</td>
+                        <td>
+                            <button class="btn btn-success" style="padding: 8px 16px; font-size: 0.75rem;">View</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Test Tenant</strong></td>
+                        <td>test.localhost:8000</td>
+                        <td><span class="badge badge-inactive">Inactive</span></td>
+                        <td>Nov 14, 2025</td>
+                        <td>
+                            <button class="btn btn-success" style="padding: 8px 16px; font-size: 0.75rem;">Activate</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="grid grid-2">
+            <div class="card">
+                <h3 style="margin-bottom: 16px; color: #2d3748;">Create New Tenant</h3>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Tenant Name</label>
+                        <input type="text" class="form-input" placeholder="Enter tenant name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Subdomain</label>
+                        <input type="text" class="form-input" placeholder="mytenant">
+                        <div class="form-help">This will create: https://mytenant.yourdomain.com</div>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Create Tenant</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 16px; color: #2d3748;">Tenant Details</h3>
+                <div style="margin-bottom: 16px;">
+                    <strong>Name:</strong> Demo Tenant<br>
+                    <strong>Subdomain:</strong> demo.localhost:8000<br>
+                    <strong>API URL:</strong> http://demo.localhost:8000<br>
+                    <strong>Status:</strong> <span class="badge badge-active">Active</span><br>
+                    <strong>Created:</strong> Nov 15, 2025 at 2:30 PM
+                </div>
+                <button class="btn btn-success" style="width: 100%;">Deactivate Tenant</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

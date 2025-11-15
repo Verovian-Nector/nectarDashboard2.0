@@ -1,11 +1,116 @@
-# Python-generated files
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Python
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-*.egg-info
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Virtual environments
-.venv
 .env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.trae/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+/tests/
+test*.py
+*test*.py
+pytest.ini
+.pytest_cache/
+.pytest.out
+.pytest_cache/
+conftest.py
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+parent.db
+dev.db
+test.db
+
+# Logs
+*.log
+wordpress_sync.log
+
+# Uploads
+/uploads/
+uploads/
+
+# Screenshots
+/screen/
+screen/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Package files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Configuration files (keep examples)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Keep example files
+!.env.example

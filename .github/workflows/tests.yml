@@ -1,0 +1,32 @@
+name: Python Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-asyncio aiosqlite httpx
+
+      - name: Run tests
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///./dev.db
+          SECRET_KEY: ci-secret
+          ALGORITHM: HS256
+          WP_SYNC_ENABLED: 'false'
+        run: |
+          pytest -q -k "not sync_test"

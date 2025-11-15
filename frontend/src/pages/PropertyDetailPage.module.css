@@ -1,0 +1,7 @@
+.tabsTab[data-active] {
+  background-color: var(--mantine-color-brand-6);
+}
+
+.tabsTab[data-active] .mantine-Tabs-tabLabel {
+  color: #ffffff;
+}

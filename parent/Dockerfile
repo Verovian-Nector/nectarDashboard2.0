@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+# Install uv
+RUN pip install uv
+
+# Set working directory
+WORKDIR /app
+
+# Copy dependency files
+COPY requirements.txt ./
+
+# Install dependencies
+RUN uv pip install --system --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 8001
+
+# Run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

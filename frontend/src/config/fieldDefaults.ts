@@ -1,0 +1,33 @@
+export const FIELD_DEFAULTS: Record<string, string[]> = {
+  conditions: ['Good', 'Poor', 'Out Of Service', 'Disposed', 'Missing'],
+  doc_types: ['EICR', 'EPC', 'Right To Rent', 'Gas Station', 'Tenancy Agreement', 'Depost Protection Document'],
+  employment_status: ['Employment', 'Self Employment', 'Unemployment'],
+  furnish_status: ['Furnished', 'Unfurnished', 'Semi Furnished'],
+  marketing_status: ['Featured', 'Discount', 'Hot Deal', 'Urgent'],
+  owner: ['Nectar', 'Landlord'],
+  payee: ['Tenants', 'Landlord', 'Nectar'],
+  payment_frequency: ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'],
+  payment_method: ['BACS', 'Standing Order', 'Cash'],
+  payment_status: ['PAID', 'LATE', 'PENDING'],
+  payment_type: ['Rent', 'Charge'],
+  property_type: ['Detached', 'Warehouse', 'Semidetached', 'Terraced', 'Maisonette', 'Flat', 'Apartment', 'Bungalow', 'Townhouse', 'TwoLandings', 'Office', 'Restuarant', 'Retail'],
+  category: ['Commercial', 'Lettings', 'Sales', 'Short Lets'],
+  role: ['propertyManager', 'propertyowner', 'propertyadmin', 'tenant'],
+}
+
+export const FIELD_USAGE_NOTES: Record<string, string> = {
+  contractors: 'Used on the Start Work and Schedule Repair modal at the Assign to field on Repairs and maintenance',
+  locations: 'used on the Edit Overview modal and the create property step modal',
+  conditions: 'used on the Item inventory modal',
+  doc_types: 'Used on the edit documents modal',
+  employment_status: 'Used on the Edit Tenant modal and Edit Tenant Details modal',
+  furnish_status: 'used on the Edit Overview modal and the create property step modal',
+  marketing_status: 'used on the Edit Overview modal and the create property step modal',
+  owner: 'used on the Item inventory modal',
+  payee: 'Used on the edit maintenance modal',
+  payment_frequency: 'used on the Edit Overview modal, Edit financials modal and the create property step modal',
+  payment_method: 'Used on the edit financial modal',
+  property_type: 'used on the Edit Overview modal and the create property step modal',
+  role: 'used on the create user modal',
+  category: 'used on the Edit Overview modal and the create property step modal',
+}
