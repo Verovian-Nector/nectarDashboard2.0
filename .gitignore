@@ -96,21 +96,28 @@ Thumbs.db
 *.bak
 *.backup
 
-# Package files
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-# Configuration files (keep examples)
+# Configuration files (keep examples locally, exclude from repo)
 .env
 .env.local
 .env.production
 .env.staging
+.env.example
 
-# Keep example files
+# Documentation files (local only)
+*.md
+!README.md
+DEPLOYMENT.md
+FRONTEND_HANDOFF.md
+FRONTEND_HANDOFF_PERMISSIONS.md
+INTEGRATIONS.md
+LIGHTSAIL_SINGLE_INSTANCE.md
+LOCAL_DEV.md
+TASKS.md
+main.py.md
+summary.md
+
+# Image files (local only)
+duedate.PNG
+
+# Keep only README.md in repo
 !.env.example
