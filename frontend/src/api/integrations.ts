@@ -17,7 +17,6 @@ export type IntegrationConfig = {
 }
 
 export type CreateIntegrationPayload = {
-  client_id: number
   integration_type: string
   direction: 'inbound' | 'outbound' | 'bidirectional'
   source_of_truth?: 'dashboard' | 'external'

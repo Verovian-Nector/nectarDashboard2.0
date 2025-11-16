@@ -32,10 +32,15 @@ async def authenticate_user(db: AsyncSession, username: str, password: str):
     return user
 
 
-def create_access_token(data: dict):
+def create_access_token(data: dict, client_id: str = None):
     to_encode = data.copy()
     expire_at = int((dt.datetime.now(dt.UTC) + dt.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)).timestamp())
     to_encode.update({"exp": expire_at})
+    
+    # Add client_id to JWT payload for tenant isolation
+    if client_id:
+        to_encode.update({"client_id": client_id})
+    
     header = {"alg": settings.ALGORITHM}
     return jwt.encode(header, to_encode, settings.SECRET_KEY)
 

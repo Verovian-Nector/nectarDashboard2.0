@@ -1089,7 +1089,9 @@ export default function AdminSettingsPage() {
                                 }
                               }
                               try {
-                                const created = await createIntegration({ client_id: clientId!, ...next })
+                                // Remove client_id - backend will derive from JWT and Host header
+                                const { client_id, ...payloadWithoutClientId } = next
+                                const created = await createIntegration(payloadWithoutClientId)
                                 setIntegrations((prev) => [...prev, created])
                                 setSelectedIntegrationId(created.id)
                                 notifications.show({ title: 'Integration created', message: `${created.integration_type} / ${created.direction}`, color: 'green' })
