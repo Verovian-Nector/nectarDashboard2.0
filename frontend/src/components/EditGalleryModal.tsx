@@ -116,7 +116,7 @@ export default function EditGalleryModal({ opened, photos, onClose, onSave }: Pr
               items.map((url, idx) => (
                 <Paper key={idx} withBorder radius="md" p="sm">
                   <Group gap="sm" align="end">
-                    <Image src={url} alt={`Photo ${idx + 1}`} radius="sm" w={96} h={72} fit="cover" withPlaceholder />
+                    <Image src={url} alt={`Photo ${idx + 1}`} radius="sm" w={96} h={72} fit="cover" />
                     <TextInput label={`Photo ${idx + 1}`} value={url} onChange={(e) => updateAt(idx, e.currentTarget.value)} style={{ flex: 1 }} />
                     <Group gap={4}>
                       <ActionIcon variant="light" aria-label="Move up" onClick={() => moveUp(idx)}>

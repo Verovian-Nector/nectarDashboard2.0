@@ -69,8 +69,8 @@ export default function CompleteMaintenanceModal({ opened, request, onClose, onC
             <DatePickerInput
               label="Completion date"
               placeholder="Pick a date"
-              value={completedDate}
-              onChange={setCompletedDate}
+              value={completedDate ? completedDate.toISOString().split('T')[0] : null}
+              onChange={(dateString) => setCompletedDate(dateString ? new Date(dateString) : null)}
               leftSection={<IconCalendar size={16} />}
             />
 

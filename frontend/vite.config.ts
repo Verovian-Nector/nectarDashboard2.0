@@ -15,6 +15,31 @@ export default defineConfig({
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
+    // Proxy API calls to the appropriate backend
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8002', // Child backend for tenant-specific data
+        changeOrigin: true,
+        secure: false,
+        // Pass subdomain as query parameter for tenant context
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // Extract subdomain from referer header or query params
+            const referer = req.headers.referer;
+            let subdomain = 'localhost';
+            
+            if (referer) {
+              const url = new URL(referer);
+              subdomain = url.searchParams.get('subdomain') || 'localhost';
+            }
+            
+            // Add subdomain to the query string
+            const separator = proxyReq.path.includes('?') ? '&' : '?';
+            proxyReq.path = `${proxyReq.path}${separator}subdomain=${subdomain}`;
+          });
+        }
+      }
+    }
   },
   // Ensure the app can handle dynamic subdomains
   define: {

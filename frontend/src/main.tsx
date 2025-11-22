@@ -25,11 +25,20 @@ import RequireAuth from './components/RequireAuth'
 import RequireAdmin from './components/RequireAdmin'
 import AdminSettingsPage from './pages/AdminSettingsPage'
 import ProfileManagementPage from './pages/ProfileManagementPage'
-
+import DebugPage from './pages/DebugPage'
 
 import AppShellLayout from './layouts/AppShellLayout'
+import { API_URL, SUBDOMAIN, SINGLE_SITE_MODE } from './config'
 
-const App = () => (
+const App = () => {
+  // Debug logging
+  console.log('[App] Component mounting...');
+  console.log('[App] API_URL:', API_URL);
+  console.log('[App] SUBDOMAIN:', SUBDOMAIN);
+  console.log('[App] SINGLE_SITE_MODE:', SINGLE_SITE_MODE);
+  console.log('[App] Window location:', window.location.href);
+  
+  return (
   <QueryClientProvider client={queryClient}>
     <BrandingProvider>
       <FieldValuesProvider>
@@ -48,6 +57,7 @@ const App = () => (
               <Route path="/financials" element={<FinancialsPage />} />
               <Route path="/maintenance" element={<MaintenancePage />} />
               <Route path="/profile" element={<ProfileManagementPage />} />
+              <Route path="/debug" element={<DebugPage />} />
               <Route element={<RequireAdmin />}> 
                 <Route path="/settings" element={<AdminSettingsPage />} />
               </Route>
@@ -60,7 +70,8 @@ const App = () => (
       </FieldValuesProvider>
     </BrandingProvider>
   </QueryClientProvider>
-)
+  )
+}
 
 const rootEl = document.querySelector<HTMLDivElement>('#app')!
 createRoot(rootEl).render(<App />)

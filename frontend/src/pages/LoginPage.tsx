@@ -48,18 +48,24 @@ export default function LoginPage() {
 
   return (
     <Stack align="center" mt={80}>
-      <Paper w={400} p="lg" withBorder>
-        <Title order={3} mb="md">Sign in</Title>
-        <form onSubmit={form.onSubmit(onSubmit)}>
+      <Paper w={400} p="lg" withBorder data-testid="login-paper">
+        <Title order={3} mb="md" data-testid="login-heading">Sign in</Title>
+        <form onSubmit={form.onSubmit(onSubmit)} data-testid="login-form">
           <Stack gap="sm">
             {errorMessage && (
               <Alert color="red" variant="light" title="Sign-in blocked">
                 {errorMessage}
               </Alert>
             )}
-            <TextInput label="Username" placeholder="your.name" {...form.getInputProps('username')} />
-            <PasswordInput label="Password" placeholder="Your password" {...form.getInputProps('password')} />
-            <Button type="submit" loading={loading}>Sign in</Button>
+            <div data-testid="login-username">
+              <TextInput label="Username" placeholder="your.name" {...form.getInputProps('username')} />
+            </div>
+            <div data-testid="login-password">
+              <PasswordInput label="Password" placeholder="Your password" {...form.getInputProps('password')} />
+            </div>
+            <div data-testid="login-submit">
+              <Button type="submit" loading={loading}>Sign in</Button>
+            </div>
             <Text c="dimmed" size="xs">Use your dashboard credentials.</Text>
           </Stack>
         </form>

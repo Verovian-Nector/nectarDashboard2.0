@@ -3,54 +3,88 @@ services:
     image: postgres:15
     environment:
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
-      POSTGRES_DB: ${DB_NAME:-nectar}
+      POSTGRES_DB: parent_db
       POSTGRES_USER: ${DB_USER:-postgres}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks: [internal]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+
   child:
     build: ./child
     env_file: .env
     networks: [internal]
-    ports:
-      - "8002:8000"
     depends_on:
       db:
         condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_PORT=5432
+      - DB_NAME=parent_db
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-postgres}
       - PARENT_URL=http://parent:8001
       - SUBDOMAIN=child
       - API_URL=http://child:8000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/parent_db
+
   parent:
     build: ./parent
     networks: [internal]
-    ports:
-      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=parent_db
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASS=${DB_PASS:-postgres}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/parent_db
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
+      - CLOUDFLARE_ZONE_ID=${CLOUDFLARE_ZONE_ID}
+      - LIGHTSAIL_IP=${LIGHTSAIL_IP:-127.0.0.1}
+
   frontend:
     build: frontend
     networks: [internal]
+
   parent-frontend:
     build: ./parent/frontend
     networks: [internal]
-    ports:
-      - "3000:80"
+
   nginx:
     image: nginx:alpine
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - /opt/ssl:/etc/nginx/ssl:ro
+      - ./nginx-ssl.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
     networks: [internal]
-    depends_on: [child, parent, frontend]
+    depends_on: [child, parent, frontend, parent-frontend]
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt:rw
+      - ./certbot/www:/var/www/certbot:rw
+      - ./parent/ssl_cert_manager.py:/app/ssl_cert_manager.py:ro
+    networks: [internal]
+    environment:
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
+    command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    depends_on: [parent]
+
 volumes: { pgdata: }
 networks:
   internal:

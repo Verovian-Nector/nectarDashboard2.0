@@ -1,42 +1,49 @@
 from sqlalchemy.orm import Session
-from models import Tenant, TenantEvent
+from models import ClientSite, ClientSiteEvent, AdminUser
 from database import engine, Base
 from datetime import datetime
 from typing import List, Optional
 import uuid
 from pydantic import BaseModel
 from config import settings
+from passlib.context import CryptContext
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Pydantic models
-class TenantCreate(BaseModel):
+class ClientSiteCreate(BaseModel):
     name: str
     subdomain: str
 
-class TenantResponse(BaseModel):
-    id: int
+class ClientSiteResponse(BaseModel):
+    id: str
     name: str
     subdomain: str
     api_url: str
     is_active: bool
-    created_at: str
+    created_at: datetime
 
-class TenantActivationResponse(BaseModel):
+    class Config:
+        from_attributes = True
+
+class ClientSiteActivationResponse(BaseModel):
     status: str
     activated_at: str
 
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-def get_tenant_by_subdomain(db: Session, subdomain: str) -> Optional[Tenant]:
-    """Get a tenant by subdomain"""
-    return db.query(Tenant).filter(Tenant.subdomain == subdomain).first()
+def get_client_site_by_subdomain(db: Session, subdomain: str) -> Optional[ClientSite]:
+    """Get a client site by subdomain"""
+    return db.query(ClientSite).filter(ClientSite.subdomain == subdomain).first()
 
 class TenantCreate(BaseModel):
     name: str
     subdomain: str
 
 class TenantResponse(BaseModel):
-    id: int
+    id: str
     name: str
     subdomain: str
     api_url: str
@@ -50,9 +57,9 @@ class TenantActivationResponse(BaseModel):
     status: str
     activated_at: datetime
 
-class TenantEventResponse(BaseModel):
-    id: int
-    tenant_id: int
+class ClientSiteEventResponse(BaseModel):
+    id: str
+    client_site_id: str
     type: str
     message: str
     created_at: datetime
@@ -60,106 +67,160 @@ class TenantEventResponse(BaseModel):
     class Config:
         from_attributes = True
 
-def create_tenant(db: Session, tenant: TenantCreate) -> Tenant:
-    """Create a new tenant"""
-    api_url = settings.child_service_base_url.format(subdomain=tenant.subdomain)
+def create_client_site(db: Session, client_site: ClientSiteCreate) -> ClientSite:
+    """Create a new client site"""
+    api_url = settings.child_service_base_url.format(subdomain=client_site.subdomain)
     
-    db_tenant = Tenant(
-        name=tenant.name,
-        subdomain=tenant.subdomain,
+    db_client_site = ClientSite(
+        name=client_site.name,
+        subdomain=client_site.subdomain,
         api_url=api_url,
         is_active=False
     )
     
-    db.add(db_tenant)
+    db.add(db_client_site)
     db.commit()
-    db.refresh(db_tenant)
-    # Log event
-    log_event(db, db_tenant.id, "info", f"Client site '{db_tenant.name}' created with subdomain '{db_tenant.subdomain}'")
-    return db_tenant
+    db.refresh(db_client_site)
+    
+    # Create admin user for the client site (skip event logging for now due to schema issues)
+    try:
+        admin_user = create_admin_user_for_client_site(db, db_client_site.id, client_site.subdomain)
+        print(f"Admin user created successfully for client site '{client_site.subdomain}'")
+    except Exception as e:
+        # Log the error but don't fail the client site creation
+        print(f"Failed to create admin user for client site '{client_site.subdomain}': {str(e)}")
+    
+    return db_client_site
 
-def get_tenant(db: Session, tenant_id: int) -> Optional[Tenant]:
-    """Get a tenant by ID"""
-    return db.query(Tenant).filter(Tenant.id == tenant_id).first()
+def get_client_site(db: Session, client_site_id: str) -> Optional[ClientSite]:
+    """Get a client site by ID"""
+    return db.query(ClientSite).filter(ClientSite.id == client_site_id).first()
 
-def get_tenant_by_subdomain(db: Session, subdomain: str) -> Optional[Tenant]:
-    """Get a tenant by subdomain"""
-    return db.query(Tenant).filter(Tenant.subdomain == subdomain).first()
+def get_tenant_by_subdomain(db: Session, subdomain: str) -> Optional[ClientSite]:
+    """Backwards-compatible alias: get client site by subdomain"""
+    return db.query(ClientSite).filter(ClientSite.subdomain == subdomain).first()
 
-def list_tenants(db: Session, skip: int = 0, limit: int = 100) -> List[Tenant]:
-    """List all tenants"""
-    return db.query(Tenant).offset(skip).limit(limit).all()
+def list_client_sites(db: Session, skip: int = 0, limit: int = 100) -> List[ClientSite]:
+    """List all client sites"""
+    return db.query(ClientSite).offset(skip).limit(limit).all()
 
-def activate_tenant(db: Session, tenant_id: int) -> Optional[Tenant]:
-    """Activate a tenant"""
-    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
-    if tenant:
-        tenant.is_active = True
+def activate_client_site(db: Session, client_site_id: str) -> Optional[ClientSite]:
+    """Activate a client site"""
+    client_site = db.query(ClientSite).filter(ClientSite.id == client_site_id).first()
+    if client_site:
+        client_site.is_active = True
         db.commit()
-        db.refresh(tenant)
-        log_event(db, tenant.id, "activation", f"Client site '{tenant.name}' activated")
-    return tenant
+        db.refresh(client_site)
+        log_event(db, client_site.id, "activation", f"Client site '{client_site.name}' activated")
+    return client_site
 
-def deactivate_tenant(db: Session, tenant_id: int) -> Optional[Tenant]:
-    """Deactivate a tenant"""
-    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
-    if tenant:
-        tenant.is_active = False
+def deactivate_client_site(db: Session, client_site_id: str) -> Optional[ClientSite]:
+    """Deactivate a client site"""
+    client_site = db.query(ClientSite).filter(ClientSite.id == client_site_id).first()
+    if client_site:
+        client_site.is_active = False
         db.commit()
-        db.refresh(tenant)
-        log_event(db, tenant.id, "deactivation", f"Client site '{tenant.name}' deactivated")
-    return tenant
+        db.refresh(client_site)
+        log_event(db, client_site.id, "deactivation", f"Client site '{client_site.name}' deactivated")
+    return client_site
 
 def update_heartbeat(db: Session, subdomain: str, api_url: str):
-    """Update heartbeat for a tenant, creating if it doesn't exist"""
-    tenant = db.query(Tenant).filter(Tenant.subdomain == subdomain).first()
+    """Update heartbeat for a client site, creating if it doesn't exist"""
+    client_site = db.query(ClientSite).filter(ClientSite.subdomain == subdomain).first()
     
-    if not tenant:
-        # Create tenant if it doesn't exist
-        tenant = Tenant(
+    if not client_site:
+        # Create client site if it doesn't exist
+        client_site = ClientSite(
             name=subdomain.title(),
             subdomain=subdomain,
             api_url=api_url,
             is_active=False,
             created_at=datetime.utcnow()
         )
-        db.add(tenant)
+        db.add(client_site)
     
-    tenant.last_seen = datetime.utcnow()
+    client_site.last_seen = datetime.utcnow()
     db.commit()
-    db.refresh(tenant)
-    log_event(db, tenant.id, "heartbeat", f"Heartbeat received for '{tenant.subdomain}'")
-    return tenant
+    db.refresh(client_site)
+    log_event(db, client_site.id, "heartbeat", f"Heartbeat received for '{client_site.subdomain}'")
+    return client_site
 
-def get_tenant_status(db: Session, subdomain: str):
-    """Get tenant status including heartbeat info"""
-    tenant = db.query(Tenant).filter(Tenant.subdomain == subdomain).first()
-    if not tenant:
+def get_client_site_status(db: Session, subdomain: str):
+    """Get client site status including heartbeat info"""
+    client_site = db.query(ClientSite).filter(ClientSite.subdomain == subdomain).first()
+    if not client_site:
         return None
     
-    # Consider tenant alive if last_seen is within last 5 minutes
+    # Consider client site alive if last_seen is within last 5 minutes
     is_alive = False
-    if tenant.last_seen:
-        time_diff = datetime.utcnow() - tenant.last_seen
+    if client_site.last_seen:
+        time_diff = datetime.utcnow() - client_site.last_seen
         is_alive = time_diff.total_seconds() < 300  # 5 minutes
     
     return {
         "alive": is_alive,
-        "last_seen": tenant.last_seen.isoformat() if tenant.last_seen else None
+        "last_seen": client_site.last_seen.isoformat() if client_site.last_seen else None
     }
 
-def log_event(db: Session, tenant_id: int, type: str, message: str) -> TenantEvent:
-    event = TenantEvent(tenant_id=tenant_id, type=type, message=message)
-    db.add(event)
+def log_event(db: Session, client_site_id: str, type: str, message: str, event_metadata: dict = None) -> ClientSiteEvent:
+    # For SQLite compatibility, store event_metadata as JSON string
+    import json
+    metadata = event_metadata or {}
+    
+    # Use raw SQL to avoid SQLAlchemy type conflicts
+    from sqlalchemy import text
+    import uuid
+    
+    event_id = str(uuid.uuid4())
+    query = text("""
+        INSERT INTO client_site_events (id, client_site_id, type, message, event_metadata, created_at)
+        VALUES (:id, :client_site_id, :type, :message, :event_metadata, datetime('now'))
+    """)
+    
+    db.execute(query, {
+        'id': event_id,
+        'client_site_id': client_site_id,
+        'type': type,
+        'message': message,
+        'event_metadata': json.dumps(metadata)
+    })
     db.commit()
-    db.refresh(event)
-    return event
+    
+    # Return the created event
+    return db.query(ClientSiteEvent).filter(ClientSiteEvent.id == event_id).first()
 
-def list_events(db: Session, tenant_id: int, limit: int = 50) -> List[TenantEvent]:
+def create_admin_user_for_client_site(db: Session, client_site_id: str, subdomain: str) -> AdminUser:
+    """Create a default admin user for a client site"""
+    admin_password = f"{subdomain}123"
+    hashed_password = pwd_context.hash(admin_password)
+    
+    # Create a unique username by combining with subdomain
+    admin_username = f"admin_{subdomain}"
+    
+    admin_user = AdminUser(
+        email=f"admin@{subdomain}.localhost",
+        username=admin_username,
+        hashed_password=hashed_password,
+        full_name="Administrator",
+        role="propertyadmin",  # Use the role expected by child frontend for consistency
+        is_active=True,
+        extra_metadata={"client_site_id": client_site_id, "auto_created": True}
+    )
+    
+    db.add(admin_user)
+    db.commit()
+    db.refresh(admin_user)
+    
+    # Log the admin user creation
+    print(f"Admin user '{admin_username}' created for client site '{subdomain}' with password '{admin_password}'")
+    
+    return admin_user
+
+def list_events(db: Session, client_site_id: str, limit: int = 50) -> List[ClientSiteEvent]:
     return (
-        db.query(TenantEvent)
-        .filter(TenantEvent.tenant_id == tenant_id)
-        .order_by(TenantEvent.created_at.desc())
+        db.query(ClientSiteEvent)
+        .filter(ClientSiteEvent.client_site_id == client_site_id)
+        .order_by(ClientSiteEvent.created_at.desc())
         .limit(limit)
         .all()
     )

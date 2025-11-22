@@ -1,4 +1,6 @@
 import { Title, Card, Stack, Group, Button, TextInput, Select, Pagination, Loader, Text, Grid, Badge, SegmentedControl, SimpleGrid, Anchor, ThemeIcon, Divider, Box, Tooltip } from '@mantine/core'
+import { motion } from 'framer-motion'
+import { variants } from '../utils/motion'
 import { useQuery } from '@tanstack/react-query'
 import PropertiesTable from '../components/PropertiesTable'
 import { listProperties, type Property } from '../api/properties'
@@ -111,6 +113,7 @@ export default function PropertiesPage() {
           </Group>
         </Group>
 
+        <motion.div {...variants.hoverLift}>
         <Card withBorder p="sm" radius="md" shadow="xs" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
           <Group gap="md" wrap="wrap">
             <Group gap="xs">
@@ -132,6 +135,7 @@ export default function PropertiesPage() {
             </Group>
           </Group>
         </Card>
+        </motion.div>
       </Stack>
 
       <Card withBorder p="md" radius="md" shadow="xs">
@@ -229,8 +233,8 @@ export default function PropertiesPage() {
                 const freqLabel = paymentFrequency ? ` • ${paymentFrequency}` : ''
 
                 return (
+                  <motion.div key={p.id} {...variants.hoverLift}>
                   <Card
-                    key={p.id}
                     withBorder
                     radius="md"
                     shadow="md"
@@ -315,6 +319,7 @@ export default function PropertiesPage() {
                       </Group>
                     </Stack>
                   </Card>
+                  </motion.div>
                 )
               })}
             </SimpleGrid>

@@ -143,7 +143,7 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
             <SimpleGrid cols={{ base: 1, md: 3 }} spacing="sm">
               <TextInput label="Postcode" value={postcode} onChange={(e) => setPostcode(e.currentTarget.value)} />
               <TextInput label="House number" value={houseNumber} onChange={(e) => setHouseNumber(e.currentTarget.value)} />
-              <Select label="Location" placeholder="Select" value={location || null} onChange={setLocation} data={locations} searchable clearable allowDeselect />
+              <Select label="Location" placeholder="Select" value={location || null} onChange={(value) => setLocation(value || '')} data={locations} searchable clearable allowDeselect />
             </SimpleGrid>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="sm">
               <Select label="Property Type" placeholder="Select" value={propertyType} onChange={setPropertyType} data={getOptions('property_type')} clearable allowDeselect />
@@ -214,7 +214,7 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
               <Card withBorder radius="md" p="md" style={{ backgroundColor: colorsForIncoming(incomingType).background, border: `1px solid ${colorsForIncoming(incomingType).color}` }}>
                 <Stack gap="sm">
                   <Text fw={700}>Incoming</Text>
-                  <Radio.Group value={incomingType} onChange={(v: 'Rent' | 'Charge') => setIncomingType(v)}>
+                  <Radio.Group value={incomingType} onChange={(v) => setIncomingType(v as 'Rent' | 'Charge')}>
                     <Group gap="md">
                       <Radio value="Rent" label="Rent" color={colorsForIncoming(incomingType).color} />
                       <Radio value="Charge" label="Charge" color={colorsForIncoming(incomingType).color} />
@@ -267,7 +267,7 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
                           )}
                         </Popover.Target>
                         <Popover.Dropdown>
-                          <DatePicker value={incomingDate} onChange={(d) => { setIncomingDate(d); setIncomingCalendarOpen(false) }} />
+                          <DatePicker value={incomingDate ? incomingDate.toISOString().split('T')[0] : null} onChange={(d) => { setIncomingDate(d ? new Date(d) : null); setIncomingCalendarOpen(false) }} />
                         </Popover.Dropdown>
                       </Popover>
                     </Stack>
@@ -313,9 +313,9 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
                           </Popover.Target>
                           <Popover.Dropdown>
                             <DatePicker
-                              value={incomingCheckoutDate}
+                              value={incomingCheckoutDate ? incomingCheckoutDate.toISOString().split('T')[0] : null}
                               onChange={async (d) => {
-                                setIncomingCheckoutDate(d)
+                                setIncomingCheckoutDate(d ? new Date(d) : null)
                                 setIncomingCheckoutOpen(false)
                                 if (d) {
                                   try {
@@ -338,7 +338,7 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
               <Card withBorder radius="md" p="md" style={{ backgroundColor: colorsForOutgoing(outgoingType).background, border: `1px solid ${colorsForOutgoing(outgoingType).color}` }}>
                 <Stack gap="sm">
                   <Text fw={700}>Outgoing</Text>
-                  <Radio.Group value={outgoingType} onChange={(v: 'Rent' | 'Charge') => setOutgoingType(v)}>
+                  <Radio.Group value={outgoingType} onChange={(v) => setOutgoingType(v as 'Rent' | 'Charge')}>
                     <Group gap="md">
                       <Radio value="Rent" label="Rent" color={colorsForOutgoing(outgoingType).color} />
                       <Radio value="Charge" label="Charge" color={colorsForOutgoing(outgoingType).color} />
@@ -391,7 +391,7 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
                           )}
                         </Popover.Target>
                         <Popover.Dropdown>
-                          <DatePicker value={outgoingDate} onChange={(d) => { setOutgoingDate(d); setOutgoingCalendarOpen(false) }} />
+                          <DatePicker value={outgoingDate ? outgoingDate.toISOString().split('T')[0] : null} onChange={(d) => { setOutgoingDate(d ? new Date(d) : null); setOutgoingCalendarOpen(false) }} />
                         </Popover.Dropdown>
                       </Popover>
                     </Stack>
@@ -437,9 +437,9 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
                           </Popover.Target>
                           <Popover.Dropdown>
                             <DatePicker
-                              value={outgoingCheckoutDate}
+                              value={outgoingCheckoutDate ? outgoingCheckoutDate.toISOString().split('T')[0] : null}
                               onChange={async (d) => {
-                                setOutgoingCheckoutDate(d)
+                                setOutgoingCheckoutDate(d ? new Date(d) : null)
                                 setOutgoingCheckoutOpen(false)
                                 if (d) {
                                   try {
@@ -462,7 +462,7 @@ export default function CreatePropertyModal({ opened, onClose, onCreated }: Prop
             <Divider my="xs" />
             <Stack gap="xs">
               <Text fw={600}>Property Status</Text>
-              <SegmentedControl value={propertyStatus} onChange={(v: 'Vacant' | 'Occupied') => setPropertyStatus(v)} data={[{ label: 'Vacant', value: 'Vacant' }, { label: 'Occupied', value: 'Occupied' }]} />
+              <SegmentedControl value={propertyStatus} onChange={(v) => setPropertyStatus(v as 'Vacant' | 'Occupied')} data={[{ label: 'Vacant', value: 'Vacant' }, { label: 'Occupied', value: 'Occupied' }]} />
             </Stack>
           </Stack>
         </Stepper.Step>

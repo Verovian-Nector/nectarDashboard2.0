@@ -1,4 +1,6 @@
 import { Title, Text, Card, Stack, Group, TextInput, Badge, ActionIcon, Tooltip, Avatar, ScrollArea, SegmentedControl, Select, Accordion, Button } from '@mantine/core'
+import { motion } from 'framer-motion'
+import { variants } from '../utils/motion'
 import { useQuery } from '@tanstack/react-query'
 import { listProperties, type Property, updateProperty } from '../api/properties'
 import { IconMail, IconPhone, IconEdit, IconUser, IconSearch, IconExternalLink, IconDownload } from '@tabler/icons-react'
@@ -214,7 +216,8 @@ export default function TenantsPage() {
           <ScrollArea h={480} type="hover" scrollbarSize={8} offsetScrollbars>
             <Stack gap="sm">
               {tenants.map((t) => (
-                <Card key={t.id} withBorder radius="md" shadow="xs" p="sm" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
+                <motion.div key={t.id} {...variants.hoverLift}>
+                <Card withBorder radius="md" shadow="xs" p="sm" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
                   <Group justify="space-between" align="center">
                     {/* Left side: avatar, name, property, status */}
                     <Group gap="sm" align="center">
@@ -261,6 +264,7 @@ export default function TenantsPage() {
                     </Group>
                   </Group>
                 </Card>
+                </motion.div>
               ))}
             </Stack>
           </ScrollArea>
@@ -285,7 +289,8 @@ export default function TenantsPage() {
                   <Accordion.Panel>
                     <Stack gap="sm">
                       {list.map((t) => (
-                <Card key={t.id} withBorder radius="md" shadow="xs" p="sm" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
+                <motion.div key={t.id} {...variants.hoverLift}>
+                <Card withBorder radius="md" shadow="xs" p="sm" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
                   <Group justify="space-between" align="center">
                             <Group gap="sm" align="center">
                               <Avatar radius="xl" color="brand" variant="light"> {initialsFromName(t.name)} </Avatar>
@@ -325,6 +330,7 @@ export default function TenantsPage() {
                             </Group>
                           </Group>
                         </Card>
+                        </motion.div>
                       ))}
                     </Stack>
                   </Accordion.Panel>

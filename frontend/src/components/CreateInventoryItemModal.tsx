@@ -118,14 +118,14 @@ export default function CreateInventoryItemModal({ opened, room, onClose, onCrea
             </Group>
 
             <Group grow>
-              <NumberInput label="Value (£)" placeholder="e.g., 1200" value={value} onChange={(v) => setValue(typeof v === 'number' ? v : null)} min={0} thousandSeparator 
+              <NumberInput label="Value (£)" placeholder="e.g., 1200" value={value ?? undefined} onChange={(v) => setValue(typeof v === 'number' ? v : null)} min={0} thousandSeparator 
               />
-              <NumberInput label="Quantity" placeholder="e.g., 1" value={quantity} onChange={(v) => setQuantity(typeof v === 'number' ? v : 1)} min={1} />
+              <NumberInput label="Quantity" placeholder="e.g., 1" value={quantity ?? undefined} onChange={(v) => setQuantity(typeof v === 'number' ? v : 1)} min={1} />
             </Group>
 
             <Group grow>
               <Select label="Owner" placeholder="Select" value={owner} onChange={setOwner} allowDeselect clearable data={getOptions('owner')} />
-              <DateInput label="Purchase date" placeholder="Select date" value={purchaseDate} onChange={setPurchaseDate} leftSection={<IconCalendar size={16} />} valueFormat="YYYY-MM-DD" />
+              <DateInput label="Purchase date" placeholder="Select date" value={purchaseDate ? purchaseDate.toISOString().split('T')[0] : null} onChange={(dateString) => setPurchaseDate(dateString ? new Date(dateString) : null)} leftSection={<IconCalendar size={16} />} valueFormat="YYYY-MM-DD" />
             </Group>
 
             <TextInput label="Notes" placeholder="Optional" value={notes ?? ''} onChange={(e) => setNotes(e.currentTarget.value || null)} />

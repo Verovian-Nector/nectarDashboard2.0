@@ -106,16 +106,16 @@ export default function EditFinancialsModal({ opened, data, onClose, onSave }: P
           <Group grow>
             <DateInput
               label="Collection date"
-              value={collectionDate}
-              onChange={setCollectionDate}
+              value={collectionDate ? collectionDate.toISOString().split('T')[0] : null}
+              onChange={(dateString) => setCollectionDate(dateString ? new Date(dateString) : null)}
               placeholder="Select date"
               valueFormat="DD MMM YYYY"
               clearable
             />
             <DateInput
               label="Payment date"
-              value={paymentDate}
-              onChange={setPaymentDate}
+              value={paymentDate ? paymentDate.toISOString().split('T')[0] : null}
+              onChange={(dateString) => setPaymentDate(dateString ? new Date(dateString) : null)}
               placeholder="Select date"
               valueFormat="DD MMM YYYY"
               clearable

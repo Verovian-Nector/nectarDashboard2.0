@@ -1,4 +1,4 @@
-import { api } from './client'
+import { authApi } from './client'
 
 export type BrandSettingsResponse = {
   id: number
@@ -26,11 +26,11 @@ export type BrandSettingsUpdate = Partial<{
 }>
 
 export async function getBranding(): Promise<BrandSettingsResponse> {
-  const resp = await api.get('/branding')
+  const resp = await authApi.get('/branding')
   return resp.data
 }
 
 export async function updateBranding(payload: BrandSettingsUpdate): Promise<BrandSettingsResponse> {
-  const resp = await api.put('/branding', payload)
+  const resp = await authApi.put('/branding', payload)
   return resp.data
 }

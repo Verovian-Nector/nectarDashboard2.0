@@ -1,97 +1,64 @@
-We'll come back to the forms after we sort out some settings.
-Consolidate Locations and contractors under a tab called "Field values". once that is done add these fields and their respective values to the Field values tab. arrange all thes feilds in a tab component and all section d dont forget to add edit button next to the delte button for each feild.
+Add these notes under each feild to indicate where they are used and confirm they are linked to the respective dropdown feilds on those forms:
+Contractors
+===========
+Used on the Start Work and Schedule Repair modal at the Assign to field on Repairs and maintenance
+
+
+location
+=========
+used on the Edit Overview modal and the create property step modal
 
 Conditions
 ==========
-Good
-Poor
-Out Of Service
-Disposed
-Missing
+used on the Item inventory modal
 
 Doc Type
 ========
-EICR
-EPC
-Right To Rent
-Gas Station
-Tenancy Agreement
-Depost Protection Document
+Used on the edit documents modal
 
 Employment Status
 =================
-Employment
-Self Employment
-Unemployment
+Used on the Edit Tenant modal and Edit Tenant Details modal
 
 Furnish Status
 ==============
-Furnished
-Unfurnished
-Semi Furnished
+used on the Edit Overview modal and the create property step modal
 
 Marketting Status
 ==================
-Featured
-Discount
-Hot Deal
-Urgent
+used on the Edit Overview modal and the create property step modal
 
 Owner
 =====
-Nectar
-Landlord
+used on the Item inventory modal
 
 Payee
 =====
-Tenants
-Landlord
-Nectar
+Used on the edit maintenance modal
 
 Payment Frequency
 =================
-Daily
-Weekly
-Monthly
-Quarterly
-Yearly
+used on the Edit Overview modal, Edit financials modal and the create property step modal
+
 
 Payment Method
 ==============
-BACS
-Standing Order
-Cash
+Used on the edit financial modal
 
-Payment Status
-===============
-PAID
-LATE
-PENDING
 
-Payment Type
-=============
-Rent
-Charge
 
 Property Type
 ==============
-Detached
-Warehouse
-Semidetached
-Terraced
-Maisonette
-Flat
-Apartment
-Bungalow
-Townhouse
-TwoLandings
-Office
-Restuarant
-Retail
-
+used on the Edit Overview modal and the create property step modal
 
 Role
 =====
-propertyManager
-propertyowner
-propertyadmin
+used on the create user modal
+
+category
+=========
+used on the Edit Overview modal and the create property step modal
+
+
+
+The existing tenants list shows a 404 error which may be becuae there are no tenant role users so in this case lets have a better error feedback like "There are currently no listed tenants"

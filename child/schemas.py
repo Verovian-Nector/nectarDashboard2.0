@@ -407,11 +407,14 @@ class DefaultItemResponse(DefaultItemBase):
 # ==================== Client & Integration Config Schemas ====================
 class ClientCreate(BaseModel):
     name: str
+    subdomain: str
 
 
 class ClientResponse(BaseModel):
     id: int
     name: str
+    subdomain: str
+    is_active: bool
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 

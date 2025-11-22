@@ -42,17 +42,21 @@ import re
  
 
 
-async def get_user(db: AsyncSession, username: str):
-    result = await db.execute(select(DBUser).where(DBUser.username == username))
+async def get_user(db: AsyncSession, username: str, client_site_id: str = None):
+    query = select(DBUser).where(DBUser.username == username)
+    if client_site_id:
+        query = query.where(DBUser.client_site_id == client_site_id)
+    result = await db.execute(query)
     return result.scalars().first()
 
 
-async def create_user(db: AsyncSession, user: UserCreate):
+async def create_user(db: AsyncSession, user: UserCreate, client_site_id: str = None):
     db_user = DBUser(
         username=user.username,
         email=user.email,
         hashed_password=user.password,
-        role=user.role
+        role=user.role,
+        client_site_id=client_site_id or "default"
     )
     db.add(db_user)
     await db.commit()
@@ -60,8 +64,8 @@ async def create_user(db: AsyncSession, user: UserCreate):
     return db_user
 
 
-async def get_property(db: AsyncSession, property_id: int):
-    result = await db.execute(
+async def get_property(db: AsyncSession, property_id: int, client_site_id: str = None):
+    query = (
         select(DBProperty)
         .options(
             selectinload(DBProperty.inventory)
@@ -70,6 +74,9 @@ async def get_property(db: AsyncSession, property_id: int):
         )
         .where(DBProperty.id == property_id)
     )
+    if client_site_id:
+        query = query.where(DBProperty.client_site_id == client_site_id)
+    result = await db.execute(query)
     property_obj = result.scalar()
     if not property_obj:
         return None
@@ -1119,8 +1126,22 @@ async def get_inventories(db: AsyncSession, skip: int = 0, limit: int = 100):
 
 
 # ==================== Clients ====================
+async def get_tenant_by_subdomain(db: AsyncSession, subdomain: str):
+    """Get client/tenant by subdomain for multi-tenant architecture"""
+    result = await db.execute(select(Client).where(Client.subdomain == subdomain))
+    client = result.scalars().first()
+    if not client:
+        return None
+    
+    return {
+        "id": client.id,
+        "subdomain": client.subdomain,
+        "name": client.name,
+        "is_active": client.is_active
+    }
+
 async def create_client(db: AsyncSession, client: ClientCreate):
-    db_client = Client(name=client.name)
+    db_client = Client(name=client.name, subdomain=client.subdomain)
     db.add(db_client)
     await db.commit()
     await db.refresh(db_client)

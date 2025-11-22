@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { IconLock, IconPlus, IconSearch } from "@tabler/icons-react";
 import { IconTrash } from "@tabler/icons-react";
+import { type User, type UserPermissions } from "../../api/users";
 import UsersPermissionsEditor from "./UsersPermissionsEditor";
 import CreateUserModal from "./CreateUserModal";
 import UserRowActions from "./UserRowActions";
@@ -24,18 +25,6 @@ export interface Crud {
   read: boolean;
   update: boolean;
   delete: boolean;
-}
-
-export interface UserPermissions {
-  [key: string]: Crud;
-}
-
-export interface User {
-  id: string | number;
-  username: string;
-  email?: string;
-  role?: string;
-  permissions?: UserPermissions;
 }
 
 type CreatePayload = {
@@ -58,12 +47,12 @@ interface UsersTabProps {
   openEditPerms: (u: User) => void;
   editUser: User | null;
   editPerms: UserPermissions;
-  setEditPerms: (p: UserPermissions) => void;
+  setEditPerms: React.Dispatch<React.SetStateAction<UserPermissions>>;
   saveEditPerms: () => void;
   onCloseEdit: () => void;
   createOpen: boolean;
   createPayload: CreatePayload;
-  setCreatePayload: (updater: (prev: CreatePayload) => CreatePayload) => void;
+  setCreatePayload: React.Dispatch<React.SetStateAction<CreatePayload>>;
   creating?: boolean;
   roleOptions: string[];
   createUserSubmit: () => void;
@@ -216,7 +205,7 @@ export default function UsersTab(props: UsersTabProps) {
         <Table striped highlightOnHover withTableBorder withColumnBorders>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th width={44}>
+              <Table.Th style={{ width: 44 }}>
                 <Checkbox
                   aria-label="Select all"
                   checked={allSelected}

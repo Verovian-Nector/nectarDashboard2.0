@@ -1,4 +1,6 @@
 import { Title, Text, Stack, Button, Group, Card, SimpleGrid, ThemeIcon, Badge, ScrollArea, Anchor, Loader, Image, Select } from '@mantine/core'
+import { motion } from 'framer-motion'
+import { variants } from '../utils/motion'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { listProperties, type Property } from '../api/properties'
@@ -170,6 +172,7 @@ export default function DashboardHome() {
 
       {/* Stats row */}
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+        <motion.div {...variants.hoverLift}>
         <Card withBorder p="md" radius="md" shadow="xs">
           <Group align="center" gap="sm">
             <ThemeIcon size="lg" radius="md" color="brand" variant="light"><IconHome size={20} /></ThemeIcon>
@@ -179,6 +182,8 @@ export default function DashboardHome() {
             </Stack>
           </Group>
         </Card>
+        </motion.div>
+        <motion.div {...variants.hoverLift}>
         <Card withBorder p="md" radius="md" shadow="xs">
           <Group align="center" gap="sm">
             <ThemeIcon size="lg" radius="md" color="brand" variant="light"><IconGauge size={20} /></ThemeIcon>
@@ -188,6 +193,8 @@ export default function DashboardHome() {
             </Stack>
           </Group>
         </Card>
+        </motion.div>
+        <motion.div {...variants.hoverLift}>
         <Card withBorder p="md" radius="md" shadow="xs">
           <Group align="center" gap="sm">
             <ThemeIcon size="lg" radius="md" color="brand" variant="light"><IconCurrencyPound size={20} /></ThemeIcon>
@@ -197,6 +204,7 @@ export default function DashboardHome() {
             </Stack>
           </Group>
         </Card>
+        </motion.div>
       </SimpleGrid>
 
       {/* At a glance */}
@@ -206,6 +214,7 @@ export default function DashboardHome() {
           <Badge variant="light" color="gray">Mock Data</Badge>
         </Group>
         <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+          <motion.div {...variants.hoverLift}>
           <Card withBorder p="md" radius="md" shadow="xs">
             <Group align="center" gap="sm">
               <ThemeIcon size="lg" radius="md" color="red" variant="light"><IconCurrencyPound size={20} /></ThemeIcon>
@@ -215,6 +224,8 @@ export default function DashboardHome() {
               </Stack>
             </Group>
           </Card>
+          </motion.div>
+          <motion.div {...variants.hoverLift}>
           <Card withBorder p="md" radius="md" shadow="xs">
             <Group align="center" gap="sm">
               <ThemeIcon size="lg" radius="md" color="pink" variant="light"><IconAlertCircle size={20} /></ThemeIcon>
@@ -224,6 +235,8 @@ export default function DashboardHome() {
               </Stack>
             </Group>
           </Card>
+          </motion.div>
+          <motion.div {...variants.hoverLift}>
           <Card withBorder p="md" radius="md" shadow="xs">
             <Group align="center" gap="sm">
               <ThemeIcon size="lg" radius="md" color="indigo" variant="light"><IconCalendar size={20} /></ThemeIcon>
@@ -233,6 +246,7 @@ export default function DashboardHome() {
               </Stack>
             </Group>
           </Card>
+          </motion.div>
         </SimpleGrid>
       </Card>
 
@@ -266,7 +280,8 @@ export default function DashboardHome() {
           <ScrollArea type="never" style={{ flex: 1, overflow: 'hidden' }} scrollbarSize={8} offsetScrollbars>
             <Group wrap="nowrap" gap="md">
               {displayItems.slice(0, 12).map((p, idx) => (
-                <Card key={p.id} withBorder radius="md" shadow="sm" p={0} style={{ minWidth: 280 }}>
+                <motion.div key={p.id} {...variants.hoverLift}>
+                <Card withBorder radius="md" shadow="sm" p={0} style={{ minWidth: 280 }}>
                   <Stack gap={0}>
                     {/* Property thumbnail: prefer backend gallery photo, fallback to picsum */}
                     <Image
@@ -274,12 +289,9 @@ export default function DashboardHome() {
                       alt={`Property preview for ${p.title}`}
                       h={120}
                       fit="cover"
-                      withPlaceholder
-                      imageProps={{
-                        onError: (e: React.SyntheticEvent<HTMLImageElement>) => {
-                          const img = e.currentTarget
-                          img.src = 'https://placehold.co/800x600?text=Property'
-                        },
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                        const img = e.currentTarget
+                        img.src = 'https://placehold.co/800x600?text=Property'
                       }}
                     />
                     <Stack p="md" gap={6}>
@@ -295,6 +307,7 @@ export default function DashboardHome() {
                     </Stack>
                   </Stack>
                 </Card>
+                </motion.div>
               ))}
             </Group>
           </ScrollArea>
@@ -302,6 +315,7 @@ export default function DashboardHome() {
       </Card>
 
       {/* Quick actions */}
+      <motion.div {...variants.hoverLift}>
       <Card withBorder p="md" radius="md" shadow="xs">
         <Group gap="sm">
           <Button component={Link} to="/properties">Manage Properties</Button>
@@ -309,6 +323,7 @@ export default function DashboardHome() {
           <Button variant="light" component={Link} to="/financials">Financials</Button>
         </Group>
       </Card>
+      </motion.div>
     </Stack>
   )
 }

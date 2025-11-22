@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>API Test</title>
+  </head>
+  <body>
+    <h1>API Connectivity Test</h1>
+    <div id="results"></div>
+
+    <script>
+      const resultsDiv = document.getElementById("results");
+
+      function addResult(message, isError = false) {
+        const p = document.createElement("p");
+        p.textContent = message;
+        p.style.color = isError ? "red" : "green";
+        resultsDiv.appendChild(p);
+      }
+
+      async function testApi() {
+        try {
+          addResult("Testing API connectivity...");
+
+          // Test 1: Direct fetch to health endpoint
+          addResult("Testing /health endpoint...");
+          const healthResponse = await fetch("http://localhost:8001/health");
+          const healthData = await healthResponse.json();
+          addResult(`Health: ${JSON.stringify(healthData)}`);
+
+          // Test 2: Fetch to tenants endpoint
+          addResult("Testing /tenants endpoint...");
+          const tenantsResponse = await fetch("http://localhost:8001/tenants");
+          const tenantsData = await tenantsResponse.json();
+          addResult(`Tenants: ${JSON.stringify(tenantsData)}`);
+
+          // Test 3: Fetch with CORS headers
+          addResult("Testing with CORS headers...");
+          const corsResponse = await fetch("http://localhost:8001/tenants", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Origin: "http://localhost:5174",
+            },
+          });
+          const corsData = await corsResponse.json();
+          addResult(`CORS Test: ${JSON.stringify(corsData)}`);
+        } catch (error) {
+          addResult(`Error: ${error.message}`, true);
+          console.error("Full error:", error);
+        }
+      }
+
+      testApi();
+    </script>
+  </body>
+</html>

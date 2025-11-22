@@ -1,4 +1,6 @@
 import { AppShell, AppShellHeader, AppShellNavbar, AppShellMain, Group, Text, Burger, Stack, NavLink, Button, Avatar, Tooltip, Image, ActionIcon, Divider } from '@mantine/core'
+import { motion, AnimatePresence } from 'framer-motion'
+import { variants } from '../utils/motion'
 import { useDisclosure } from '@mantine/hooks'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useSession } from '../state/session'
@@ -32,9 +34,13 @@ export default function AppShellLayout() {
       try {
         const me = await getMe()
         if (!mounted) return
-        setIsAdmin(me.role === 'propertyadmin')
+        // Check for admin roles - 'propertyadmin' is the primary role expected by child frontend
+        const adminRoles = ['propertyadmin', 'admin', 'super_admin']
+        setIsAdmin(adminRoles.includes(me.role))
         setUsername(me.username || '')
-      } catch {
+        console.log('[AppShellLayout] User role:', me.role, 'Is admin:', adminRoles.includes(me.role))
+      } catch (error) {
+        console.error('[AppShellLayout] Failed to load user info:', error)
         if (!mounted) return
         setIsAdmin(false)
       }
@@ -135,7 +141,11 @@ export default function AppShellLayout() {
       </AppShellNavbar>
 
       <AppShellMain>
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <motion.div {...variants.fadeInUp}>
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </AppShellMain>
     </AppShell>
   )

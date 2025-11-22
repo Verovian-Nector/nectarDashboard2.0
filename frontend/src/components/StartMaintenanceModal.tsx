@@ -79,7 +79,7 @@ export default function StartMaintenanceModal({ opened, request, assignees, prio
               label="Start date"
               placeholder="Pick a date"
               value={startDate}
-              onChange={setStartDate}
+              onChange={(value) => setStartDate(value ? new Date(value) : null)}
               leftSection={<IconCalendar size={16} />}
             />
 

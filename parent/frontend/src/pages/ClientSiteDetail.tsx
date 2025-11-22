@@ -30,7 +30,7 @@ import {
   IconCalendar,
 } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
-import { clientSiteApi } from '../api/client';
+import { clientSiteApi, api } from '../api/client';
 
 export function ClientSiteDetail() {
   const { id } = useParams<{ id: string }>();
@@ -39,8 +39,27 @@ export function ClientSiteDetail() {
 
   const { data: clientSite, isLoading, refetch } = useQuery({
     queryKey: ['clientSite', id],
-    queryFn: () => clientSiteApi.getClientSites().then(clientSites => clientSites.find(t => t.id === parseInt(id!))),
+    queryFn: async () => {
+      // First try to find in cached list
+      const clientSites = await clientSiteApi.getClientSites();
+      const found = clientSites.find(t => t.id === id);
+      
+      // If not found in cache, try direct API call
+      if (!found) {
+        try {
+          const response = await api.get(`/client-sites/${id}`);
+          return response.data;
+        } catch (error) {
+          console.log('[ClientSiteDetail] Client site not found via direct API either:', error);
+          return null;
+        }
+      }
+      
+      return found;
+    },
     enabled: !!id,
+    retry: 3, // Retry up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   const { data: config } = useQuery({
@@ -48,15 +67,15 @@ export function ClientSiteDetail() {
     queryFn: clientSiteApi.getConfig,
   });
 
-  const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useQuery({
+  const { data: events, isLoading: eventsLoading, refetch: refetchEvents } = useQuery<import('../api/client').ClientSiteEvent[]>({
     queryKey: ['events', id],
-    queryFn: () => clientSiteApi.getTenantEvents(parseInt(id!)),
+    queryFn: () => clientSiteApi.getClientSiteEvents(id!),
     enabled: !!id,
   });
 
-  const { data: health, isLoading: healthLoading, refetch: refetchHealth } = useQuery({
+  const { data: health, isLoading: healthLoading, refetch: refetchHealth } = useQuery<import('../api/client').ClientSiteHealth>({
     queryKey: ['health', id],
-    queryFn: () => clientSiteApi.getTenantHealth(parseInt(id!)),
+    queryFn: () => clientSiteApi.getClientSiteHealth(id!),
     enabled: !!id,
   });
 
@@ -106,10 +125,16 @@ export function ClientSiteDetail() {
     );
   }
 
-  if (!clientSite) {
+  if (!clientSite && !isLoading) {
     return (
       <Center style={{ height: '50vh' }}>
-        <Text size="lg" c="dimmed">Client site not found</Text>
+        <Stack align="center" gap="md">
+          <Text size="lg" c="dimmed">Client site not found</Text>
+          <Text size="sm" c="dimmed">This might happen if the site was just created. Try refreshing or wait a moment.</Text>
+          <Button onClick={() => refetch()} variant="light">
+            Retry
+          </Button>
+        </Stack>
       </Center>
     );
   }

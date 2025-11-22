@@ -195,7 +195,7 @@ export default function EditTenantModal({ opened, tenant, onClose, onSave }: Pro
                     label="Date of birth"
                     placeholder="Select date"
                     value={dateOfBirthDate}
-                    onChange={setDateOfBirthDate}
+                    onChange={(value) => setDateOfBirthDate(value ? new Date(value) : null)}
                     leftSection={<IconCalendar size={16} />}
                     maxDate={new Date()}
                     valueFormat="YYYY-MM-DD"
@@ -204,7 +204,7 @@ export default function EditTenantModal({ opened, tenant, onClose, onSave }: Pro
                     label="Agreement signed date"
                     placeholder="Select date"
                     value={agreementSignedDateDate}
-                    onChange={setAgreementSignedDateDate}
+                    onChange={(value) => setAgreementSignedDateDate(value ? new Date(value) : null)}
                     leftSection={<IconFileText size={16} />}
                     maxDate={new Date()}
                     valueFormat="YYYY-MM-DD"

@@ -222,7 +222,7 @@ export default function FinancialsPage() {
                     label="From"
                     placeholder="Pick start"
                     value={fromDate}
-                    onChange={setFromDate}
+                    onChange={(value) => setFromDate(value ? new Date(value) : null)}
                     clearable
                     maxDate={toDate || undefined}
                     error={invalidRange && fromDate && toDate ? 'Start must be before end' : undefined}
@@ -231,7 +231,7 @@ export default function FinancialsPage() {
                     label="To"
                     placeholder="Pick end"
                     value={toDate}
-                    onChange={setToDate}
+                    onChange={(value) => setToDate(value ? new Date(value) : null)}
                     clearable
                     minDate={fromDate || undefined}
                     error={invalidRange && fromDate && toDate ? 'End must be after start' : undefined}
@@ -242,7 +242,7 @@ export default function FinancialsPage() {
                 )}
               </Stack>
             ) : (
-              <DateInput label="Reference date" placeholder="Pick date" value={refDate} onChange={setRefDate} clearable />
+              <DateInput label="Reference date" placeholder="Pick date" value={refDate} onChange={(value) => setRefDate(value ? new Date(value) : null)} clearable />
             )}
           </Group>
           <Group gap="xs" align="center">
@@ -256,7 +256,7 @@ export default function FinancialsPage() {
       <Card withBorder p="md" radius="md" shadow="xs" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
         <Stack gap="xs">
           <Text size="sm" c="dimmed">Status</Text>
-          <Chip.Group multiple value={statusSelected} onChange={(vals: Status[]) => setStatusSelected(vals)}>
+          <Chip.Group multiple value={statusSelected} onChange={(vals: string[]) => setStatusSelected(vals as Status[])}>
             <Group gap="xs" wrap="wrap">
               <Chip value="Paid" variant="light" color="green">Paid</Chip>
               <Chip value="Pending" variant="light" color="yellow">Pending</Chip>

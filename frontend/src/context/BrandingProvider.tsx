@@ -1,6 +1,8 @@
-import { ReactNode, createContext, useContext, useMemo, useEffect } from 'react'
+import { createContext, useContext, useMemo, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { useLocalStorage } from '@mantine/hooks'
 import { MantineProvider, createTheme } from '@mantine/core'
+import { baseTheme } from '../theme'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getBranding, updateBranding, type BrandSettingsResponse, type BrandSettingsUpdate } from '../api/branding'
 import { deriveBrandPalette } from '../utils/color'
@@ -23,8 +25,8 @@ function buildTheme(branding: BrandSettingsResponse | null) {
   const primaryColor = 'brand'
   const primaryHex = branding?.primary_color || '#2A7B88'
   const brandPalette = (branding?.brand_palette && branding.brand_palette.length === 10)
-    ? branding.brand_palette
-    : deriveBrandPalette(primaryHex)
+    ? (branding.brand_palette as [string, string, string, string, string, string, string, string, string, string])
+    : (deriveBrandPalette(primaryHex) as [string, string, string, string, string, string, string, string, string, string])
 
   const overrides = (branding?.theme_overrides || {}) as Record<string, any>
   const buttonBg = (overrides.button_bg_hex as string) || primaryHex
@@ -35,24 +37,30 @@ function buildTheme(branding: BrandSettingsResponse | null) {
   const iconColor = (overrides.icon_color_hex as string) || brandPalette[9]
 
   return createTheme({
+    ...baseTheme,
     fontFamily,
     headings: { fontFamily },
     defaultRadius: 'md',
     primaryColor,
-    colors: { brand: brandPalette },
+    colors: { ...(baseTheme as any).colors, brand: brandPalette },
     components: {
+      ...(baseTheme as any).components,
       Button: {
-        styles: (theme) => ({
+        styles: (theme: any) => ({
           root: {
+            fontWeight: 600,
+            transition: 'transform 120ms ease, box-shadow 120ms ease',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.02), 0 1px 1px rgba(0,0,0,0.04)',
             backgroundColor: buttonBg || theme.colors.brand[6],
             color: buttonText,
             borderColor: 'transparent',
             '&:hover': { backgroundColor: buttonBg ? buttonBg : theme.colors.brand[7] },
+            '&:active': { transform: 'scale(0.98)' },
           },
         }),
       },
       Badge: {
-        styles: (theme) => ({
+        styles: (theme: any) => ({
           root: {
             backgroundColor: badgeBg || theme.colors.brand[1],
             color: badgeText,
@@ -67,7 +75,7 @@ function buildTheme(branding: BrandSettingsResponse | null) {
         },
       },
       ThemeIcon: {
-        styles: (theme) => ({
+        styles: (theme: any) => ({
           root: {
             backgroundColor: iconBg || theme.colors.brand[1],
             color: iconColor || theme.colors.brand[9],
@@ -75,7 +83,7 @@ function buildTheme(branding: BrandSettingsResponse | null) {
         }),
       },
       ActionIcon: {
-        styles: (theme) => ({
+        styles: (theme: any) => ({
           root: {
             backgroundColor: iconBg || theme.colors.brand[1],
             color: iconColor || theme.colors.brand[9],
@@ -98,6 +106,8 @@ export default function BrandingProvider({ children }: { children: ReactNode }) 
   const { data: branding } = useQuery({
     queryKey: ['branding'],
     queryFn: getBranding,
+    retry: false, // Don't retry on authentication errors
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
   const mutation = useMutation({

@@ -29,7 +29,7 @@ export type User = {
   role: string
   is_active: boolean
   created_at: string
-  permissions?: Record<string, any> | null
+  permissions?: UserPermissions | null
 }
 
 export type CreateUserPayload = {

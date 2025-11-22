@@ -10,7 +10,6 @@ import {
   Divider,
   Grid,
   Group,
-  Loader,
   Paper,
   Skeleton,
   Stack,

@@ -77,7 +77,7 @@ export default function ScheduleMaintenanceModal({ opened, request, assignees, p
               label="Scheduled date"
               placeholder="Pick a date"
               value={scheduledDate}
-              onChange={setScheduledDate}
+              onChange={(value) => setScheduledDate(value ? new Date(value) : null)}
               leftSection={<IconCalendar size={16} />}
             />
 

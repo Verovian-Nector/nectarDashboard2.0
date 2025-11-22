@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test</title>
+</head>
+<body>
+    <h1>Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            try {
+                console.log('Testing login...');
+                
+                const params = new URLSearchParams();
+                params.append('username', 'admin');
+                params.append('password', 'admin123');
+                
+                console.log('Request body:', params.toString());
+                
+                const response = await fetch('/api/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    },
+                    body: params.toString()
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${response.status} - ${errorText}</p>`;
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Success:', data);
+                document.getElementById('result').innerHTML = `<p style="color: green;">Success: ${JSON.stringify(data)}</p>`;
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Fetch Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

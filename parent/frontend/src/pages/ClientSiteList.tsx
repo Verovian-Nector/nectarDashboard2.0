@@ -32,6 +32,13 @@ export function ClientSiteList() {
     queryFn: clientSiteApi.getClientSites,
   });
 
+  // Debug logging
+  console.log('[ClientSiteList] clientSites data:', clientSites);
+  console.log('[ClientSiteList] clientSites length:', clientSites?.length);
+  console.log('[ClientSiteList] isLoading:', isLoading);
+  console.log('[ClientSiteList] Current URL:', window.location.href);
+  console.log('[ClientSiteList] Route path:', window.location.pathname);
+
   const { data: config } = useQuery({
     queryKey: ['config'],
     queryFn: clientSiteApi.getConfig,
@@ -51,14 +58,26 @@ export function ClientSiteList() {
 
   const createMutation = useMutation({
     mutationFn: clientSiteApi.createClientSite,
-    onSuccess: () => {
+    onSuccess: (newClientSite) => {
       notifications.show({ title: 'Success', message: 'Client site created successfully', color: 'green' });
+      // Force immediate refetch to ensure data is available
       queryClient.invalidateQueries({ queryKey: ['clientSites'] });
+      queryClient.refetchQueries({ queryKey: ['clientSites'] });
+      
+      // Always close modal on success
       setCreateOpen(false);
       setFormData({ name: '', subdomain: '' });
+      
+      // Navigate to the new client site detail page after a short delay
+      setTimeout(() => {
+        navigate(`/client-site/${newClientSite.id}`);
+      }, 500);
     },
     onError: (error: any) => {
       notifications.show({ title: 'Error', message: error.response?.data?.detail || 'Failed to create client site', color: 'red' });
+      // Still close modal on error to prevent hanging
+      setCreateOpen(false);
+      setFormData({ name: '', subdomain: '' });
     },
   });
 
@@ -68,10 +87,25 @@ export function ClientSiteList() {
       notifications.show({ title: 'Validation Error', message: 'Please fill in all fields', color: 'orange' });
       return;
     }
-    createMutation.mutate(formData as any);
+    
+    // Validate subdomain format
+    if (!/^[a-z0-9-]+$/.test(formData.subdomain)) {
+      notifications.show({ title: 'Validation Error', message: 'Subdomain can only contain lowercase letters, numbers, and hyphens', color: 'orange' });
+      return;
+    }
+    
+    try {
+      createMutation.mutate(formData);
+    } catch (error) {
+      console.error('[ClientSiteList] Error creating client site:', error);
+      notifications.show({ title: 'Error', message: 'An unexpected error occurred. Please try again.', color: 'red' });
+      // Ensure modal closes even on unexpected errors
+      setCreateOpen(false);
+      setFormData({ name: '', subdomain: '' });
+    }
   };
 
-  const handleActivate = async (id: number, name: string) => {
+  const handleActivate = async (id: string, name: string) => {
     try {
       await clientSiteApi.activateClientSite(id);
       notifications.show({
@@ -168,7 +202,7 @@ export function ClientSiteList() {
         </Group>
       </Table.Td>
     </Table.Tr>
-  ));
+  )) || [];
 
   return (
     <Paper shadow="sm" p="md" radius="md" style={{ width: '100%' }}>
@@ -328,7 +362,7 @@ export function ClientSiteList() {
             mb="lg"
             radius="md"
             size="md"
-            description={`This will create: ${config?.child_service_base_url_template.replace('<subdomain>', formData.subdomain || 'my-client-site')}`}
+            description={`This will create: ${config?.child_service_base_url_template?.replace('<subdomain>', formData.subdomain || 'my-client-site') || 'Loading configuration...'}`}
           />
 
           <Group justify="flex-end" mt="md">

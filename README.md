@@ -1,12 +1,12 @@
 # 🏠 Nectar Property Management Dashboard 2.0
 
-A modern, multi-tenant property management platform with parent-child service architecture, built with React, FastAPI, and Docker.
+A modern, multi-client-site property management platform with parent-child service architecture, built with React, FastAPI, and Docker.
 
 ## 🚀 Architecture Overview
 
-This project implements a **multi-tenant architecture** with:
-- **Parent Service**: Manages tenants and orchestrates child services
-- **Child Services**: Individual property management services per tenant
+This project implements a **multi-client-site architecture** with:
+- **Parent Service**: Manages client sites and orchestrates child services
+- **Child Services**: Individual property management services per client site
 - **Frontend Applications**: Modern React interfaces for both parent and child dashboards
 
 ## 📁 Project Structure
@@ -31,7 +31,7 @@ ectarDashboard2.0/
 │   ├── alembic/                    # Database migrations
 │   ├── requirements.txt            # Python dependencies
 │   └── Dockerfile                  # Container configuration
-├── frontend/                        # Main multi-tenant frontend
+├── frontend/                        # Main multi-client-site frontend
 │   ├── src/                        # React TypeScript source
 │   │   ├── api/                    # API service modules
 │   │   ├── components/             # Reusable UI components
@@ -51,10 +51,10 @@ ectarDashboard2.0/
 
 ## 🎯 Key Features
 
-### Multi-Tenant Architecture
-- **Tenant Management**: Create and manage multiple property management companies
-- **Subdomain Routing**: Each tenant gets their own subdomain (e.g., `tenant1.localhost`)
-- **Isolated Data**: Tenant-specific data isolation and security
+### Multi-Client Site Architecture
+- **Client Site Management**: Create and manage multiple property management companies
+- **Subdomain Routing**: Each client site gets their own subdomain (e.g., `client1.localhost`)
+- **Isolated Data**: Client site-specific data isolation and security
 
 ### Property Management
 - **Property Listings**: Create and manage property listings
@@ -63,9 +63,9 @@ ectarDashboard2.0/
 - **Financial Management**: Track rent, expenses, and financial reports
 
 ### Branding & Customization
-- **Custom Branding**: Each tenant can customize their dashboard appearance
+- **Custom Branding**: Each client site can customize their dashboard appearance
 - **Logo & Colors**: Upload custom logos and set brand colors
-- **Domain Mapping**: Custom domain support for each tenant
+- **Domain Mapping**: Custom domain support for each client site
 
 ### Integration Capabilities
 - **WordPress Sync**: Automatic synchronization with WordPress websites
@@ -173,9 +173,9 @@ All API endpoints require JWT tokens. Obtain tokens from `/auth/login` endpoints
 ## 📊 API Endpoints
 
 ### Parent Service (Port 8001)
-- `GET /tenants` - List all tenants
-- `POST /tenants` - Create new tenant
-- `GET /tenants/{id}` - Get tenant details
+- `GET /client-sites` - List all client sites
+- `POST /client-sites` - Create new client site
+- `GET /client-sites/{id}` - Get client site details
 - `GET /config` - System configuration
 
 ### Child Service (Port 8002)

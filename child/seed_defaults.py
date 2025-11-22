@@ -1,14 +1,19 @@
 # seed_defaults.py
 import asyncio
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from database import engine, Base, AsyncSessionLocal
+from database import engine, Base, IS_SQLITE, SessionLocal
 from database import DefaultRoom, DefaultItem  # ✅ Import from database.py
 
 
 async def ensure_tables():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    if IS_SQLITE:
+        # For SQLite, use sync engine
+        Base.metadata.create_all(bind=engine)
+    else:
+        # For PostgreSQL, use async engine
+        from sqlalchemy.ext.asyncio import AsyncSession
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
 
 async def seed_defaults():
@@ -127,49 +132,93 @@ async def seed_defaults():
     created_items = 0
     updated_items = 0
 
-    async with AsyncSessionLocal() as db:  # type: AsyncSession
-        # Upsert rooms by room_name
-        for rd in rooms_definitions:
-            result = await db.execute(select(DefaultRoom).where(DefaultRoom.room_name == rd["room_name"]))
-            existing = result.scalars().first()
-            if existing:
-                # Update order if changed
-                if existing.order != rd["order"]:
-                    existing.order = rd["order"]
-                    updated_rooms += 1
-            else:
-                db.add(DefaultRoom(room_name=rd["room_name"], order=rd["order"]))
-                created_rooms += 1
+    if IS_SQLITE:
+        # For SQLite, use sync session
+        from sqlalchemy.orm import Session
+        db = SessionLocal()
+        try:
+            # Upsert rooms by room_name
+            for rd in rooms_definitions:
+                existing = db.query(DefaultRoom).filter(DefaultRoom.room_name == rd["room_name"]).first()
+                if existing:
+                    # Update order if changed
+                    if existing.order != rd["order"]:
+                        existing.order = rd["order"]
+                        updated_rooms += 1
+                else:
+                    db.add(DefaultRoom(room_name=rd["room_name"], order=rd["order"]))
+                    created_rooms += 1
 
-        await db.commit()
+            db.commit()
 
-        # Upsert items by (room_name, name)
-        for idf in items_definitions:
-            result = await db.execute(
-                select(DefaultItem).where(
+            # Upsert items by (room_name, name)
+            for idf in items_definitions:
+                existing_item = db.query(DefaultItem).filter(
                     DefaultItem.room_name == idf["room_name"],
-                    DefaultItem.name == idf["name"],
+                    DefaultItem.name == idf["name"]
+                ).first()
+                if existing_item:
+                    # Update fields if changed
+                    changed = False
+                    for key in ("brand", "value", "condition", "owner", "notes", "photos", "order"):
+                        if getattr(existing_item, key) != idf.get(key):
+                            setattr(existing_item, key, idf.get(key))
+                            changed = True
+                    if changed:
+                        updated_items += 1
+                else:
+                    db.add(DefaultItem(**idf))
+                    created_items += 1
+
+            db.commit()
+        finally:
+            db.close()
+    else:
+        # For PostgreSQL, use async session
+        from sqlalchemy.ext.asyncio import AsyncSession
+        async with AsyncSessionLocal() as db:
+            # Upsert rooms by room_name
+            for rd in rooms_definitions:
+                result = await db.execute(select(DefaultRoom).where(DefaultRoom.room_name == rd["room_name"]))
+                existing = result.scalars().first()
+                if existing:
+                    # Update order if changed
+                    if existing.order != rd["order"]:
+                        existing.order = rd["order"]
+                        updated_rooms += 1
+                else:
+                    db.add(DefaultRoom(room_name=rd["room_name"], order=rd["order"]))
+                    created_rooms += 1
+
+            await db.commit()
+
+            # Upsert items by (room_name, name)
+            for idf in items_definitions:
+                result = await db.execute(
+                    select(DefaultItem).where(
+                        DefaultItem.room_name == idf["room_name"],
+                        DefaultItem.name == idf["name"],
+                    )
                 )
-            )
-            existing_item = result.scalars().first()
-            if existing_item:
-                # Update fields if changed
-                changed = False
-                for key in ("brand", "value", "condition", "owner", "notes", "photos", "order"):
-                    if getattr(existing_item, key) != idf.get(key):
-                        setattr(existing_item, key, idf.get(key))
-                        changed = True
-                if changed:
-                    updated_items += 1
-            else:
-                db.add(DefaultItem(**idf))
-                created_items += 1
+                existing_item = result.scalars().first()
+                if existing_item:
+                    # Update fields if changed
+                    changed = False
+                    for key in ("brand", "value", "condition", "owner", "notes", "photos", "order"):
+                        if getattr(existing_item, key) != idf.get(key):
+                            setattr(existing_item, key, idf.get(key))
+                            changed = True
+                    if changed:
+                        updated_items += 1
+                else:
+                    db.add(DefaultItem(**idf))
+                    created_items += 1
 
-        await db.commit()
+            await db.commit()
 
-        print("✅ Defaults seeding complete.")
-        print(f"Rooms -> created: {created_rooms}, updated: {updated_rooms}")
-        print(f"Items -> created: {created_items}, updated: {updated_items}")
+    print("✅ Defaults seeding complete.")
+    print(f"Rooms -> created: {created_rooms}, updated: {updated_rooms}")
+    print(f"Items -> created: {created_items}, updated: {updated_items}")
 
 
 # Run it

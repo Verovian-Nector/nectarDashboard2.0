@@ -1,16 +1,16 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 import os
+from config import settings
 
-# Use file-based SQLite database for MVP
-SQLALCHEMY_DATABASE_URL = "sqlite:///./parent.db"
-
+# Create engine with PostgreSQL-specific settings
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    echo=True
+    settings.database_url,
+    echo=True,
+    pool_pre_ping=True,  # Verify connections before using them
+    pool_recycle=300,    # Recycle connections after 5 minutes
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -20,7 +20,7 @@ Base = declarative_base()
 # Create tables immediately
 def create_tables():
     # Import models to ensure tables are registered
-    from models import Tenant, Base as ModelsBase  # Import here to avoid circular imports
+    from models import Base as ModelsBase  # Import here to avoid circular imports
     # Create tables for the models' Base (not the local Base)
     ModelsBase.metadata.create_all(bind=engine)
 

@@ -17,8 +17,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-async def authenticate_user(db: AsyncSession, username: str, password: str):
-    user = await get_user(db, username)
+async def authenticate_user(db: AsyncSession, username: str, password: str, client_site_id: str = None):
+    user = await get_user(db, username, client_site_id)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -47,7 +47,8 @@ def create_access_token(data: dict, client_id: str = None):
 
 async def get_current_user(
     db: AsyncSession = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+    token: str = Depends(oauth2_scheme),
+    client_site_id: str = None
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -61,9 +62,11 @@ async def get_current_user(
         username: str = claims.get("sub")
         if username is None:
             raise credentials_exception
+        # Extract client_id from JWT for tenant isolation
+        client_site_id = claims.get("client_id")
     except JoseError:
         raise credentials_exception
-    user = await get_user(db, username=username)
+    user = await get_user(db, username=username, client_site_id=client_site_id)
     if user is None:
         raise credentials_exception
     # Reject requests from deactivated accounts

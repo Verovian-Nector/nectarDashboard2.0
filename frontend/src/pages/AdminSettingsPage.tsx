@@ -216,7 +216,7 @@ export default function AdminSettingsPage() {
     if (editCategory === 'locations') {
       setLocationOptions((prev) => prev.map((v, i) => (i === idx ? text : v)))
     } else if (editCategory === 'contractors') {
-      setContractors((prev) => prev.map((v, i) => (i === idx ? text : v)))
+      setContractors(contractors.map((v, i) => (i === idx ? text : v)))
     } else {
       setFieldValues((prev) => ({
         ...prev,
@@ -515,7 +515,7 @@ export default function AdminSettingsPage() {
     setEditUser(u)
     const base: UserPermissions = {}
     for (const key of sectionKeys()) {
-      const raw = (u.permissions || {})[key as string]
+      const raw = (u.permissions || {})[key as keyof UserPermissions]
       if (raw && typeof raw === 'object') base[key] = raw as any
       else base[key] = defaultCRUD()
     }
@@ -812,7 +812,13 @@ export default function AdminSettingsPage() {
                 fieldValues={fieldValues}
                 newValues={newValues}
                 setNewValues={setNewValues}
-                setContractors={setContractors}
+                setContractors={(value) => {
+                  if (typeof value === 'function') {
+                    setContractors(value(contractors))
+                  } else {
+                    setContractors(value)
+                  }
+                }}
                 openEditFieldValue={openEditFieldValue}
                 moveUpFieldValue={moveUpFieldValue}
                 removeFieldValue={(category, index) => {

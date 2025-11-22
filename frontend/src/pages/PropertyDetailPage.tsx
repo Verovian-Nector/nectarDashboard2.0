@@ -2,9 +2,9 @@ import { useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getProperty, updateProperty, type PropertyDetail, type InventoryRoom, type InventoryItem } from '../api/properties'
 import { getMe, createUser } from '../api/users'
-import { Title, Badge, Group, Stack, Card, Text, Tabs, Grid, Loader, Anchor, Table, ScrollArea, SimpleGrid, Image, Accordion, ActionIcon, Avatar, Divider, Tooltip, ThemeIcon, Button } from '@mantine/core'
+import { Title, Badge, Group, Stack, Card, Text, Tabs, Grid, Loader, Anchor, Table, SimpleGrid, Image, Accordion, ActionIcon, Avatar, Divider, Tooltip, ThemeIcon, Button } from '@mantine/core'
 import classes from './PropertyDetailPage.module.css'
-import { IconMapPin, IconReceipt, IconUser, IconTools, IconCalendar, IconAlertTriangle, IconGauge, IconNote, IconHome, IconBuilding, IconClipboardList, IconBed, IconBath, IconSofa, IconCar, IconPhone, IconCurrencyPound, IconLock, IconChartLine, IconCreditCard, IconFileText, IconClock, IconCircleCheck, IconPencil, IconUpload, IconX, IconPlus } from '@tabler/icons-react'
+import { IconReceipt, IconUser, IconTools, IconCalendar, IconAlertTriangle, IconGauge, IconNote, IconHome, IconBuilding, IconClipboardList, IconPhone, IconCurrencyPound, IconChartLine, IconCreditCard, IconFileText, IconClock, IconCircleCheck, IconPencil, IconPlus } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import React, { useEffect, useState } from 'react'
 import { formatDate, formatCurrency } from '../utils/format'
@@ -43,7 +43,7 @@ function MonochromeIcon({ size = 'lg', children }: { size?: number | string, chi
 export default function PropertyDetailPage() {
   const { id } = useParams()
   const propertyId = Number(id)
-  const { data, isLoading, error } = useQuery<PropertyDetail, Error>({
+  const { data, isLoading } = useQuery<PropertyDetail, Error>({
     queryKey: ['property', propertyId],
     queryFn: () => getProperty(propertyId),
     enabled: Number.isFinite(propertyId) && propertyId > 0,
@@ -191,13 +191,6 @@ export default function PropertyDetailPage() {
     email: acf?.profile_management?.email ?? null,
     phone: acf?.profile_management?.phone ?? acf?.profile_management?.telephone ?? acf?.profile_management?.mobile ?? null,
   }
-
-  const tenantsInitial = tenantGroup ? {
-    tenants_name: tenantGroup?.tenants_name ?? tenantGroup?.name ?? null,
-    phone: tenantGroup?.phone ?? null,
-    employment_status: tenantGroup?.employment_status ?? null,
-    agreement_signed_date: tenantGroup?.agreement_signed_date ?? null,
-  } : null
 
   const financialsInitial = {
     rent_to_landlord: (p as any)?.financial_info?.rent ?? (acf as any)?.financial_group?.rent_to_landord ?? null,

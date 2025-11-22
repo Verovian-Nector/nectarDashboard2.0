@@ -4,6 +4,26 @@ import { useState } from 'react'
 
 type Frequency = 'weekly' | 'monthly'
 
+type EventType = 'incomingRent' | 'incomingCharge' | 'outgoingRent' | 'outgoingCharge'
+
+interface CalendarEvent {
+  id: string
+  type: EventType
+  date: Date
+  title: string
+  amount?: number
+  propertyName: string
+  tenantName: string
+  propertyType: string
+  incomingDate?: Date | null // start date of incoming schedule
+  outgoingDate?: Date | null // start date of outgoing schedule
+  incomingEndDate?: Date | null // end date for short-lets incoming schedule
+  outgoingEndDate?: Date | null // end date for short-lets outgoing schedule
+  status: 'Pending' | 'Paid' | 'Scheduled' | 'Overdue'
+  direction: 'incoming' | 'outgoing'
+  frequency: Frequency
+}
+
 function startOfWeek(date: Date, weekStartsOn: 0 | 1 = 1) {
   const d = new Date(date)
   const day = d.getDay() // 0-6 (Sun-Sat)
@@ -78,26 +98,6 @@ export default function CalendarPage() {
   const monthCells = Array.from({ length: 42 }).map((_, i) => addDays(monthStart, i))
   const weekStart = startOfWeek(currentDate, weekStartsOn)
   const weekCells = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i))
-
-  // Mock events
-  type EventType = 'incomingRent' | 'incomingCharge' | 'outgoingRent' | 'outgoingCharge'
-  interface CalendarEvent {
-    id: string
-    type: EventType
-    date: Date
-    title: string
-    amount?: number
-    propertyName: string
-    tenantName: string
-    propertyType: string
-    incomingDate?: Date | null // start date of incoming schedule
-    outgoingDate?: Date | null // start date of outgoing schedule
-    incomingEndDate?: Date | null // end date for short-lets incoming schedule
-    outgoingEndDate?: Date | null // end date for short-lets outgoing schedule
-    status: 'Pending' | 'Paid' | 'Scheduled' | 'Overdue'
-    direction: 'incoming' | 'outgoing'
-    frequency: Frequency
-  }
   const EVENT_COLORS: Record<EventType, string> = {
     incomingRent: '#1eb5fd',
     incomingCharge: '#fff82a',
@@ -244,7 +244,7 @@ export default function CalendarPage() {
     <Stack p="md" gap="md">
       <Group justify="space-between" align="center">
         <Title order={2}>Calendar</Title>
-        <SegmentedControl value={view} onChange={(v: 'month' | 'week') => setView(v)} data={[{ value: 'month', label: 'Month' }, { value: 'week', label: 'Week' }]} />
+        <SegmentedControl value={view} onChange={(v: string) => setView(v as 'month' | 'week')} data={[{ value: 'month', label: 'Month' }, { value: 'week', label: 'Week' }]} />
       </Group>
 
       {/* Top section: full-width calendar with month/week toggle */}

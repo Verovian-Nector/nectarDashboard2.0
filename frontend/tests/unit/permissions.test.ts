@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { UserPermissions } from '../api/users'
-import { defaultCRUD, sectionKeys, getCrudFor, withCrudPatch, withCheckbox } from './permissions'
+import type { UserPermissions } from '../../src/api/users'
+import { defaultCRUD, sectionKeys, getCrudFor, withCrudPatch, withCheckbox } from '../../src/utils/permissions'
 
 describe('permissions utils', () => {
   it('defaultCRUD returns read=true, others=false', () => {

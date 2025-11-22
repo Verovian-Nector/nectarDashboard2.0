@@ -273,7 +273,7 @@ export default function MaintenancePage() {
           <Select label="Priority" placeholder="All" value={priority} onChange={setPriority} data={[{ value: 'All', label: 'All' }, ...PRIORITIES.map(p => ({ value: p, label: p }))]} />
           <Stack gap={4}>
             <Text size="sm" c="dimmed">View</Text>
-            <SegmentedControl value={view} onChange={(v: 'board' | 'table') => setView(v)} data={[{ value: 'board', label: 'Tabs' }, { value: 'table', label: 'Table' }]} />
+            <SegmentedControl value={view} onChange={(v: string) => setView(v as 'board' | 'table')} data={[{ value: 'board', label: 'Tabs' }, { value: 'table', label: 'Table' }]} />
           </Stack>
         </SimpleGrid>
       </Card>
@@ -281,7 +281,7 @@ export default function MaintenancePage() {
       {/* Board view */}
       {view === 'board' ? (
         <Card withBorder p="md" radius="md" shadow="xs" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
-          <Tabs value={boardTab} onChange={setBoardTab} variant="pills" color="teal">
+          <Tabs value={boardTab} onChange={(value: string | null) => setBoardTab(value || 'new')} variant="pills" color="teal">
             <Tabs.List>
               <Tabs.Tab value="new" leftSection={<IconClipboardList size={14} />}>New ({countByStatus['New']})</Tabs.Tab>
               <Tabs.Tab value="scheduled" leftSection={<IconCalendar size={14} />}>Scheduled ({countByStatus['Scheduled']})</Tabs.Tab>
@@ -576,7 +576,7 @@ export default function MaintenancePage() {
         </Card>
       ) : (
         <Card withBorder p="md" radius="md" shadow="xs" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
-          <Tabs value={tab} onChange={setTab} variant="pills" color="teal">
+          <Tabs value={tab} onChange={(value: string | null) => setTab(value || 'all')} variant="pills" color="teal">
             <Tabs.List>
               <Tabs.Tab value="all" leftSection={<IconClipboardList size={14} />}>All ({filtered.length})</Tabs.Tab>
               <Tabs.Tab value="new" leftSection={<IconClipboardList size={14} />}>New ({countByStatus['New']})</Tabs.Tab>
