@@ -55,6 +55,8 @@ ectarDashboard2.0/
 - **Client Site Management**: Create and manage multiple property management companies
 - **Subdomain Routing**: Each client site gets their own subdomain (e.g., `client1.localhost`)
 - **Isolated Data**: Client site-specific data isolation and security
+- **Live Data Integration**: All API endpoints now use live database queries instead of mock data
+- **Tenant Isolation**: Complete data separation between client sites using `client_site_id` filtering
 
 ### Property Management
 - **Property Listings**: Create and manage property listings
@@ -179,11 +181,11 @@ All API endpoints require JWT tokens. Obtain tokens from `/auth/login` endpoints
 - `GET /config` - System configuration
 
 ### Child Service (Port 8002)
-- `GET /properties` - List properties
-- `POST /auth/login` - User authentication
-- `GET /dashboard/stats` - Dashboard statistics
+- `GET /properties` - List properties (tenant-isolated)
+- `POST /auth/login` - User authentication with subdomain support
+- `GET /dashboard/stats` - Dashboard statistics (live data)
 - `GET /branding` - Tenant branding
-- `GET /financials` - Financial data
+- `GET /financials` - Financial data (tenant-isolated)
 
 ## 🧪 Testing
 
@@ -197,6 +199,15 @@ cd child && pytest
 ```bash
 cd frontend && npm test
 cd parent/frontend && npm test
+```
+
+### Tenant Isolation Testing
+```bash
+# Test glam client site
+curl -X POST "http://localhost:8002/auth/login" -H "Host: glam.localhost" -d '{"email":"admin@glam.localhost","password":"glam123"}'
+
+# Test dox client site  
+curl -X POST "http://localhost:8002/auth/login" -H "Host: dox.localhost" -d '{"email":"admin@dox.localhost","password":"dox123"}'
 ```
 
 ## 🚀 Deployment
@@ -234,4 +245,4 @@ For support and questions, please contact the development team.
 
 ---
 
-**Built with ❤️ by the Verovian Nectar Team**
+**Built by the virtu team**
