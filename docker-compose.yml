@@ -28,10 +28,12 @@ services:
       - DB_NAME=parent_db
       - DB_USER=${DB_USER:-postgres}
       - DB_PASS=${DB_PASS:-postgres}
-      - PARENT_URL=http://parent:8001
+      - PARENT_URL=http://parent:8000
       - SUBDOMAIN=child
       - API_URL=http://child:8000
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/parent_db
+    ports:
+      - "8002:8000"
 
   parent:
     build: ./parent
@@ -49,6 +51,8 @@ services:
       - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - CLOUDFLARE_ZONE_ID=${CLOUDFLARE_ZONE_ID}
       - LIGHTSAIL_IP=${LIGHTSAIL_IP:-127.0.0.1}
+    ports:
+      - "8001:8000"
 
   frontend:
     build: frontend
