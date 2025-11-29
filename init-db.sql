@@ -1,13 +1,7 @@
 -- Multi-client-site PostgreSQL Database Initialization Script
 -- This script sets up the database for schema-per-client-site isolation
 
--- Create database and user if they don't exist
-CREATE DATABASE IF NOT EXISTS nectar_dashboard;
-CREATE USER IF NOT EXISTS nectar_user WITH PASSWORD 'nectar_password';
-GRANT ALL PRIVILEGES ON DATABASE nectar_dashboard TO nectar_user;
-
--- Connect to the database
-\c nectar_dashboard;
+-- Using the default database specified by POSTGRES_DB (e.g., parent_db)
 
 -- Create extensions for UUID support and JSON operations
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -75,9 +69,9 @@ BEGIN
     EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
     
     -- Grant permissions to application user
-    EXECUTE format('GRANT ALL ON SCHEMA %I TO nectar_user', schema_name);
-    EXECUTE format('GRANT ALL ON ALL TABLES IN SCHEMA %I TO nectar_user', schema_name);
-    EXECUTE format('GRANT ALL ON ALL SEQUENCES IN SCHEMA %I TO nectar_user', schema_name);
+    EXECUTE format('GRANT ALL ON SCHEMA %I TO postgres', schema_name);
+    EXECUTE format('GRANT ALL ON ALL TABLES IN SCHEMA %I TO postgres', schema_name);
+    EXECUTE format('GRANT ALL ON ALL SEQUENCES IN SCHEMA %I TO postgres', schema_name);
     
     RETURN client_site_id;
 END;
@@ -113,9 +107,9 @@ VALUES ('admin@nectar.com', 'admin', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8
 ON CONFLICT (email) DO NOTHING;
 
 -- Grant permissions
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA shared TO nectar_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA shared TO nectar_user;
-GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA shared TO nectar_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA shared TO postgres;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA shared TO postgres;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA shared TO postgres;
 
 -- Create a template schema for new client sites
 CREATE SCHEMA IF NOT EXISTS client_site_template;
@@ -165,5 +159,5 @@ CREATE TABLE IF NOT EXISTS client_site_template.properties (
 );
 
 -- Grant permissions on template schema
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA client_site_template TO nectar_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA client_site_template TO nectar_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA client_site_template TO postgres;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA client_site_template TO postgres;
