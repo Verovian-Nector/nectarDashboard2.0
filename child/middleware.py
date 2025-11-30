@@ -8,7 +8,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import IS_SQLITE, SessionLocal
+from database import IS_SQLITE
+try:
+    from database import SessionLocal
+except ImportError:
+    SessionLocal = None
 try:
     from database import AsyncSessionLocal
 except ImportError:
