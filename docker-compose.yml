@@ -32,6 +32,8 @@ services:
       - SUBDOMAIN=child
       - API_URL=http://child:8000
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/parent_db
+      - SECRET_KEY=${JWT_SECRET}
+      - ALGORITHM=HS256
     ports:
       - "8002:8000"
 
