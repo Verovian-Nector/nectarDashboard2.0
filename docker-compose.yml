@@ -49,7 +49,7 @@ services:
       - DB_NAME=parent_db
       - DB_USER=${DB_USER:-postgres}
       - DB_PASS=${DB_PASS:-postgres}
-      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/parent_db
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/parent_db
       - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - CLOUDFLARE_ZONE_ID=${CLOUDFLARE_ZONE_ID}
       - LIGHTSAIL_IP=${LIGHTSAIL_IP:-127.0.0.1}

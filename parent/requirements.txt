@@ -5,6 +5,7 @@ pydantic
 psycopg2-binary
 python-jose[cryptography]
 PyJWT==2.9.0
+asyncpg==0.29.0
 passlib[bcrypt]
 python-multipart
 httpx
