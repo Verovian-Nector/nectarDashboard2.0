@@ -8,9 +8,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    networks: [internal]
+    networks: [ internal ]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -18,7 +18,7 @@ services:
   child:
     build: ./child
     env_file: .env
-    networks: [internal]
+    networks: [ internal ]
     depends_on:
       db:
         condition: service_healthy
@@ -39,7 +39,7 @@ services:
 
   parent:
     build: ./parent
-    networks: [internal]
+    networks: [ internal ]
     depends_on:
       db:
         condition: service_healthy
@@ -58,11 +58,13 @@ services:
 
   frontend:
     build: frontend
-    networks: [internal]
+    networks: [ internal ]
 
   parent-frontend:
     build: ./parent/frontend
-    networks: [internal]
+    networks: [ internal ]
+    depends_on:
+      - parent
 
   nginx:
     image: nginx:alpine
@@ -73,8 +75,8 @@ services:
       - ./nginx-ssl.conf:/etc/nginx/nginx.conf:ro
       - ./certbot/conf:/etc/letsencrypt:ro
       - ./certbot/www:/var/www/certbot:ro
-    networks: [internal]
-    depends_on: [child, parent, frontend, parent-frontend]
+    networks: [ internal ]
+    depends_on: [ child, parent, frontend, parent-frontend ]
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
 
   certbot:
@@ -83,13 +85,13 @@ services:
       - ./certbot/conf:/etc/letsencrypt:rw
       - ./certbot/www:/var/www/certbot:rw
       - ./parent/ssl_cert_manager.py:/app/ssl_cert_manager.py:ro
-    networks: [internal]
+    networks: [ internal ]
     environment:
       - CERTBOT_EMAIL=${CERTBOT_EMAIL}
       - DOMAIN_NAME=${DOMAIN_NAME}
       - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
     command: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-    depends_on: [parent]
+    depends_on: [ parent ]
 
 volumes: { pgdata: }
 networks:
