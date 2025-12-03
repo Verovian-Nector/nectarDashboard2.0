@@ -25,7 +25,7 @@ def create_default_admin():
         
         # Create default admin user
         admin_user = AdminUser(
-            email="admin@nectarestates.com",
+            email="admin@viviplatform.com",
             username="admin",
             hashed_password=get_password_hash("admin123"),
             full_name="System Administrator",
@@ -42,7 +42,7 @@ def create_default_admin():
         print(f"Default admin user created successfully!")
         print(f"Username: admin")
         print(f"Password: admin123")
-        print(f"Email: admin@nectarestates.com")
+        print(f"Email: admin@viviplatform.com")
         print(f"Role: super_admin")
         
         return admin_user
