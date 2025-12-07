@@ -53,6 +53,8 @@ services:
       - CLOUDFLARE_API_KEY=${CLOUDFLARE_API_KEY}
       - CLOUDFLARE_ZONE_ID=${CLOUDFLARE_ZONE_ID}
       - LIGHTSAIL_IP=${LIGHTSAIL_IP:-127.0.0.1}
+      - MAIN_DOMAIN=${DOMAIN_NAME:-localhost}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - "8001:8000"
 
