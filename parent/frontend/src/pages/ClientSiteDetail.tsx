@@ -43,7 +43,7 @@ export function ClientSiteDetail() {
       // First try to find in cached list
       const clientSites = await clientSiteApi.getClientSites();
       const found = clientSites.find(t => t.id === id);
-      
+
       // If not found in cache, try direct API call
       if (!found) {
         try {
@@ -54,7 +54,7 @@ export function ClientSiteDetail() {
           return null;
         }
       }
-      
+
       return found;
     },
     enabled: !!id,
@@ -81,14 +81,20 @@ export function ClientSiteDetail() {
 
   const computePublicUrl = () => {
     if (!clientSite) return '';
-    // Use the main frontend with subdomain as path parameter
-    // This allows the same frontend to serve different client sites
-    return `http://localhost:5173/?subdomain=${clientSite.subdomain}`;
+    // Use config to determine the proper URL format
+    if (!config) return `http://localhost:5173/?subdomain=${clientSite.subdomain}`;
+
+    const domain = config.main_domain || 'localhost';
+    if (domain === 'localhost') {
+      return `http://localhost:5173/?subdomain=${clientSite.subdomain}`;
+    }
+    // Production: use proper subdomain URL
+    return `https://${clientSite.subdomain}.${domain}`;
   };
 
   const handleToggleActivation = async () => {
     if (!clientSite) return;
-    
+
     try {
       if (clientSite.is_active) {
         // Deactivate
