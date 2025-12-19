@@ -152,6 +152,15 @@ class ClientSiteProvisioningService:
     async def _create_client_site_schema(self, subdomain: str) -> str:
         """Create client site-specific database schema"""
         try:
+            # Check if we're using SQLite
+            is_sqlite = str(self.db.bind.url).startswith("sqlite")
+            
+            if is_sqlite:
+                import uuid
+                client_site_id = str(uuid.uuid4())
+                logger.info(f"Skipping schema creation for client site '{subdomain}' (SQLite environment)")
+                return client_site_id
+
             # Execute database function to create client site schema
             result = self.db.execute(
                 text("SELECT create_client_site_schema(:subdomain)"),
@@ -306,6 +315,13 @@ class ClientSiteProvisioningService:
     async def _delete_client_site_schema(self, subdomain: str):
         """Delete client site-specific database schema"""
         try:
+            # Check if we're using SQLite
+            is_sqlite = str(self.db.bind.url).startswith("sqlite")
+            
+            if is_sqlite:
+                logger.info(f"Skipping schema deletion for client site '{subdomain}' (SQLite environment)")
+                return
+
             # Execute database function to drop client site schema
             self.db.execute(
                 text("SELECT drop_client_site_schema(:subdomain)"),

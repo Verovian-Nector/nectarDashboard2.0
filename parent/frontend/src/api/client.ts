@@ -17,7 +17,7 @@ api.interceptors.request.use((config) => {
     headers: config.headers,
     data: config.data
   });
-  
+
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) {
     config.headers = config.headers || {};
@@ -61,12 +61,12 @@ authApi.interceptors.request.use((config) => {
     headers: config.headers,
     data: config.data
   });
-  
+
   // Don't add auth header for login requests
   if (config.url?.includes('/token')) {
     return config;
   }
-  
+
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) {
     config.headers = config.headers || {};
@@ -155,6 +155,10 @@ export const clientSiteApi = {
     return response.data;
   },
 
+  deleteClientSite: async (subdomain: string): Promise<void> => {
+    await api.delete(`/client-sites/${subdomain}`);
+  },
+
   getHealth: async (): Promise<{ status: string; timestamp: string }> => {
     const response = await api.get<{ status: string; timestamp: string }>('/health');
     return response.data;
@@ -194,21 +198,21 @@ export interface User {
 export const authApiClient = {
   login: async (username: string, password: string): Promise<TokenResponse> => {
     console.log('[Auth] Attempting login with username:', username);
-    
+
     // Use the regular api client for login (since authApi might have issues)
     const params = new URLSearchParams();
     params.append('username', username);
     params.append('password', password);
-    
+
     console.log('[Auth] Request body:', params.toString());
-    
+
     const response = await api.post<TokenResponse>('/token', params.toString(), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json'
       },
     });
-    
+
     console.log('[Auth] Login response:', response.data);
     return response.data;
   },

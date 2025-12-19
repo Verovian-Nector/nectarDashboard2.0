@@ -259,8 +259,8 @@ async def get_tenant_status_endpoint(subdomain: str, db: Session = Depends(get_d
 async def provision_tenant(request: TenantProvisioningRequest, db: Session = Depends(get_db)):
     """Provision a new client site with database schema and all configurations"""
     try:
-        service = TenantProvisioningService(db)
-        tenant = await service.create_tenant(
+        service = ClientSiteProvisioningService(db)
+        tenant = await service.create_client_site(
             subdomain=request.subdomain,
             name=request.name,
             settings=request.settings
@@ -285,8 +285,8 @@ async def provision_tenant(request: TenantProvisioningRequest, db: Session = Dep
 async def get_tenant_provision_status(subdomain: str, db: Session = Depends(get_db)):
     """Get comprehensive client site provisioning status"""
     try:
-        service = TenantProvisioningService(db)
-        status = await service.get_tenant_status(subdomain)
+        service = ClientSiteProvisioningService(db)
+        status = await service.get_client_site_status(subdomain)
         return TenantStatusResponse(**status)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -298,8 +298,8 @@ async def get_tenant_provision_status(subdomain: str, db: Session = Depends(get_
 async def suspend_tenant_endpoint(subdomain: str, db: Session = Depends(get_db)):
     """Suspend a client site (disable access but keep data)"""
     try:
-        service = TenantProvisioningService(db)
-        tenant = await service.suspend_tenant(subdomain)
+        service = ClientSiteProvisioningService(db)
+        tenant = await service.suspend_client_site(subdomain)
         
         return TenantProvisioningResponse(
             id=str(tenant.id),
@@ -320,8 +320,8 @@ async def suspend_tenant_endpoint(subdomain: str, db: Session = Depends(get_db))
 async def activate_tenant_endpoint(subdomain: str, db: Session = Depends(get_db)):
     """Activate a suspended client site"""
     try:
-        service = TenantProvisioningService(db)
-        tenant = await service.activate_tenant(subdomain)
+        service = ClientSiteProvisioningService(db)
+        tenant = await service.activate_client_site(subdomain)
         
         return TenantProvisioningResponse(
             id=str(tenant.id),
@@ -342,8 +342,8 @@ async def activate_tenant_endpoint(subdomain: str, db: Session = Depends(get_db)
 async def delete_tenant_endpoint(subdomain: str, db: Session = Depends(get_db)):
     """Delete a client site and all its data (irreversible)"""
     try:
-        service = TenantProvisioningService(db)
-        success = await service.delete_tenant(subdomain)
+        service = ClientSiteProvisioningService(db)
+        success = await service.delete_client_site(subdomain)
         
         if success:
             return TenantProvisioningResponse(
