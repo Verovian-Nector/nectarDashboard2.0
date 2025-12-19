@@ -94,10 +94,15 @@ class ClientSiteProvisioningService:
             record_provisioning_step(subdomain, "admin_user_seeding", success=True, error=None)
             
             # Step 5: Create client site record FIRST (so we have a valid ID)
+            # Generate the api_url based on subdomain
+            main_domain = os.getenv("MAIN_DOMAIN", "homes.viviplatform.com")
+            api_url = f"https://{subdomain}.{main_domain}"
+            
             client_site = ClientSite(
                 id=client_site_id,
                 subdomain=subdomain,
                 name=name,
+                api_url=api_url,
                 is_active=True,
                 status="active",
                 settings=settings or {}
