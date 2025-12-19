@@ -38,15 +38,6 @@ class ClientSiteProvisioningService:
             complete_provisioning_tracking(subdomain, success=False, error_message=f"Client site with subdomain '{subdomain}' already exists")
             raise ValueError(f"Client site with subdomain '{subdomain}' already exists")
         
-        # Create provisioning log entry
-        log_entry = ClientSiteProvisioningLog(
-            subdomain=subdomain,
-            action="create",
-            status="pending"
-        )
-        self.db.add(log_entry)
-        self.db.commit()
-        
         try:
             # Step 1: Create client site schema in database
             record_provisioning_step(subdomain, "database_schema_creation", success=True)
@@ -102,7 +93,7 @@ class ClientSiteProvisioningService:
             await self._seed_admin_user(subdomain, client_site_id)
             record_provisioning_step(subdomain, "admin_user_seeding", success=True, error=None)
             
-            # Step 5: Create client site record
+            # Step 5: Create client site record FIRST (so we have a valid ID)
             client_site = ClientSite(
                 id=client_site_id,
                 subdomain=subdomain,
@@ -112,21 +103,27 @@ class ClientSiteProvisioningService:
                 settings=settings or {}
             )
             self.db.add(client_site)
+            self.db.flush()  # Flush to get the ID without committing
             
-            # Update provisioning log with results
-            log_entry.status = "completed"
-            log_entry.completed_at = datetime.utcnow()
-            log_entry.client_site_id = client_site_id
-            log_entry.metadata = {
-                "dns_created": bool(dns_result),
-                "dns_record_id": dns_result.get("id") if dns_result else None,
-                "dns_record_name": dns_result.get("name") if dns_result else None,
-                "ssl_certificate_issued": ssl_result.get("success") if ssl_result else False,
-                "ssl_certificate_message": ssl_result.get("message") if ssl_result else None,
-                "admin_user_seeded": True,
-                "admin_username": "admin",
-                "admin_password_pattern": f"{subdomain}123"
-            }
+            # Step 6: Create provisioning log entry (now client_site_id is valid)
+            log_entry = ClientSiteProvisioningLog(
+                client_site_id=client_site_id,
+                subdomain=subdomain,
+                action="create",
+                status="completed",
+                completed_at=datetime.utcnow(),
+                extra_metadata={
+                    "dns_created": bool(dns_result),
+                    "dns_record_id": dns_result.get("id") if dns_result else None,
+                    "dns_record_name": dns_result.get("name") if dns_result else None,
+                    "ssl_certificate_issued": ssl_result.get("success") if ssl_result else False,
+                    "ssl_certificate_message": ssl_result.get("message") if ssl_result else None,
+                    "admin_user_seeded": True,
+                    "admin_username": "admin",
+                    "admin_password_pattern": f"{subdomain}123"
+                }
+            )
+            self.db.add(log_entry)
             
             self.db.commit()
             
@@ -137,11 +134,22 @@ class ClientSiteProvisioningService:
             return client_site
             
         except Exception as e:
-            # Update provisioning log with error
-            log_entry.status = "failed"
-            log_entry.error_message = str(e)
-            log_entry.completed_at = datetime.utcnow()
-            self.db.commit()
+            # Rollback and create error log entry
+            self.db.rollback()
+            
+            # Try to log the error (may fail if client_site doesn't exist yet)
+            try:
+                error_log = ClientSiteProvisioningLog(
+                    subdomain=subdomain,
+                    action="create",
+                    status="failed",
+                    error_message=str(e),
+                    completed_at=datetime.utcnow()
+                )
+                self.db.add(error_log)
+                self.db.commit()
+            except Exception:
+                pass  # If logging fails, don't mask the original error
             
             # Complete provisioning tracking with error
             complete_provisioning_tracking(subdomain, success=False, error_message=str(e))
@@ -286,16 +294,13 @@ class ClientSiteProvisioningService:
             # Step 3: Delete client site schema
             await self._delete_client_site_schema(subdomain)
             
-            # Step 4: Delete client site record
-            self.db.delete(client_site)
+            # Step 4: Delete related records first (to avoid foreign key violations)
+            from models import ClientSiteEvent
+            self.db.query(ClientSiteEvent).filter(ClientSiteEvent.client_site_id == client_site.id).delete()
+            self.db.query(ClientSiteProvisioningLog).filter(ClientSiteProvisioningLog.client_site_id == client_site.id).delete()
             
-            # Update provisioning log
-            log_entry.status = "completed"
-            log_entry.completed_at = datetime.utcnow()
-            log_entry.metadata = {
-                "dns_deleted": dns_deleted,
-                "ssl_revoked": ssl_revoked
-            }
+            # Step 5: Delete client site record
+            self.db.delete(client_site)
             
             self.db.commit()
             
