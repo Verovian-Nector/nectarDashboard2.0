@@ -172,6 +172,23 @@ async def get_client_site_by_id(client_site_id: str, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Client site not found")
     return client_site
 
+@app.get("/client-sites/{subdomain}/validate")
+async def validate_client_site(subdomain: str, db: Session = Depends(get_db)):
+    """Validate a client site by subdomain - used by child backend middleware"""
+    client_site = get_client_site_by_subdomain(db, subdomain)
+    if not client_site:
+        raise HTTPException(status_code=404, detail=f"Client site '{subdomain}' not found")
+    if not client_site.is_active:
+        raise HTTPException(status_code=403, detail=f"Client site '{subdomain}' is not active")
+    return {
+        "id": client_site.id,
+        "subdomain": client_site.subdomain,
+        "name": client_site.name,
+        "is_active": client_site.is_active,
+        "status": "active" if client_site.is_active else "inactive",
+        "api_url": client_site.api_url
+    }
+
 @app.get("/client-sites/{client_site_id}/events", response_model=List[ClientSiteEventResponse])
 async def get_client_site_events(client_site_id: str, db: Session = Depends(get_db)):
     client_site = get_client_site(db, client_site_id)
