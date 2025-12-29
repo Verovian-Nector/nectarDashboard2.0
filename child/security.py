@@ -1,5 +1,5 @@
 # security.py
-from passlib.context import CryptContext
+import bcrypt
 import hmac
 import hashlib
 from datetime import datetime, timezone
@@ -44,15 +44,21 @@ def verify_hmac_signature(
     except Exception:
         return False
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
-def verify_password(plain_password: str, hashed_password: str):
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against a bcrypt hash using bcrypt directly."""
     try:
-        return pwd_context.verify(plain_password, hashed_password)
-    except ValueError:
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'),
+            hashed_password.encode('utf-8')
+        )
+    except Exception:
         return False
 
 
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
+def get_password_hash(password: str) -> str:
+    """Hash a password using bcrypt directly."""
+    return bcrypt.hashpw(
+        password.encode('utf-8'),
+        bcrypt.gensalt()
+    ).decode('utf-8')
