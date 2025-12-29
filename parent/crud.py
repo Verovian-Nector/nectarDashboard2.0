@@ -163,31 +163,28 @@ def get_client_site_status(db: Session, subdomain: str):
     }
 
 def log_event(db: Session, client_site_id: str, type: str, message: str, event_metadata: dict = None) -> ClientSiteEvent:
-    # For SQLite compatibility, store event_metadata as JSON string
+    """Log an event for a client site - compatible with both SQLite and PostgreSQL"""
     import json
-    metadata = event_metadata or {}
-    
-    # Use raw SQL to avoid SQLAlchemy type conflicts
-    from sqlalchemy import text
+    from datetime import datetime
     import uuid
     
-    event_id = str(uuid.uuid4())
-    query = text("""
-        INSERT INTO client_site_events (id, client_site_id, type, message, event_metadata, created_at)
-        VALUES (:id, :client_site_id, :type, :message, :event_metadata, datetime('now'))
-    """)
+    metadata = event_metadata or {}
     
-    db.execute(query, {
-        'id': event_id,
-        'client_site_id': client_site_id,
-        'type': type,
-        'message': message,
-        'event_metadata': json.dumps(metadata)
-    })
+    # Create event using SQLAlchemy ORM for database compatibility
+    event = ClientSiteEvent(
+        id=str(uuid.uuid4()),
+        client_site_id=client_site_id,
+        type=type,
+        message=message,
+        event_metadata=json.dumps(metadata) if isinstance(metadata, dict) else metadata,
+        created_at=datetime.utcnow()
+    )
+    
+    db.add(event)
     db.commit()
+    db.refresh(event)
     
-    # Return the created event
-    return db.query(ClientSiteEvent).filter(ClientSiteEvent.id == event_id).first()
+    return event
 
 def create_admin_user_for_client_site(db: Session, client_site_id: str, subdomain: str) -> AdminUser:
     """Create a default admin user for a client site"""
