@@ -17,14 +17,24 @@ const getSubdomain = (): string => {
   console.log('[Config] Hostname:', hostname, 'Parts:', parts);
 
   // Handle different cases:
-  // child.localhost:5173 -> subdomain = child
-  // test.localhost:5173 -> subdomain = test
-  // localhost:5173 -> subdomain = localhost
+  // Production: jax.homes.viviplatform.com -> subdomain = jax
+  // Development: child.localhost:5173 -> subdomain = child
+  // Development: test.localhost:5173 -> subdomain = test
+  // Fallback: localhost:5173 -> subdomain = localhost
 
-  if (parts.length >= 2 && parts[1] === 'localhost') {
-    const subdomain = parts[0];
-    console.log('[Config] Detected subdomain from hostname:', subdomain);
-    return subdomain;
+  if (parts.length >= 2) {
+    // Production: *.homes.viviplatform.com or similar production domains
+    if (hostname.includes('viviplatform.com') || hostname.includes('.homes.')) {
+      const subdomain = parts[0];
+      console.log('[Config] Detected subdomain from production hostname:', subdomain);
+      return subdomain;
+    }
+    // Development: *.localhost
+    if (parts[1] === 'localhost') {
+      const subdomain = parts[0];
+      console.log('[Config] Detected subdomain from dev hostname:', subdomain);
+      return subdomain;
+    }
   }
 
   console.log('[Config] Using default subdomain: localhost');
