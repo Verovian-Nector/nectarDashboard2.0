@@ -17,7 +17,7 @@ export function Settings() {
   ];
 
   return (
-    <Paper>
+    <div style={{ maxWidth: 1200 }}>
       <Group justify="space-between" mb="lg">
         <Title order={2}>Settings</Title>
         <Badge variant="dot" color="blue">Parent Dashboard</Badge>
@@ -28,12 +28,12 @@ export function Settings() {
 
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
         {modules.map((m) => (
-          <Card key={m.key} withBorder radius="md" p="md">
+          <Card key={m.key} withBorder radius="md" p="md" shadow="sm">
             <Title order={4} mb="xs">{m.title}</Title>
             <Text c="dimmed" size="sm">{m.desc}</Text>
           </Card>
         ))}
       </SimpleGrid>
-    </Paper>
+    </div>
   );
 }
