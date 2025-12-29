@@ -68,6 +68,53 @@ BEGIN
     -- Create client site-specific schema
     EXECUTE format('CREATE SCHEMA IF NOT EXISTS %I', schema_name);
     
+    -- Create users table in the new schema
+    EXECUTE format('CREATE TABLE IF NOT EXISTS %I.users (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        username VARCHAR(63) UNIQUE NOT NULL,
+        hashed_password VARCHAR(255) NOT NULL,
+        full_name VARCHAR(255),
+        role VARCHAR(50) DEFAULT ''user'',
+        is_active BOOLEAN DEFAULT true,
+        client_site_id VARCHAR(255),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_login TIMESTAMP WITH TIME ZONE,
+        permissions JSONB DEFAULT ''{}''::jsonb
+    )', schema_name);
+    
+    -- Create clients table in the new schema
+    EXECUTE format('CREATE TABLE IF NOT EXISTS %I.clients (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        address TEXT,
+        company VARCHAR(255),
+        status VARCHAR(20) DEFAULT ''active'',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        metadata JSONB DEFAULT ''{}''::jsonb
+    )', schema_name);
+    
+    -- Create properties table in the new schema
+    EXECUTE format('CREATE TABLE IF NOT EXISTS %I.properties (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        address TEXT NOT NULL,
+        price DECIMAL(15,2),
+        property_type VARCHAR(50),
+        bedrooms INTEGER,
+        bathrooms INTEGER,
+        square_feet INTEGER,
+        status VARCHAR(20) DEFAULT ''available'',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        metadata JSONB DEFAULT ''{}''::jsonb
+    )', schema_name);
+    
     -- Grant permissions to application user
     EXECUTE format('GRANT ALL ON SCHEMA %I TO postgres', schema_name);
     EXECUTE format('GRANT ALL ON ALL TABLES IN SCHEMA %I TO postgres', schema_name);
