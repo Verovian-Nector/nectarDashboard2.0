@@ -147,7 +147,7 @@ class ClientSiteMiddleware(BaseHTTPMiddleware):
                     
                     # Verify schema exists by checking if we can query a basic table
                     result = await session.execute(text("SELECT 1"))
-                    await result.fetchone()
+                    result.scalar()  # fetchone() is sync, not async - use scalar() instead
                     
                     # Store session in request state for use in endpoints
                     request.state.db = session
