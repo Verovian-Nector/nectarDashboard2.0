@@ -387,9 +387,16 @@ if IS_SQLITE:
         finally:
             db.close()
 else:
-    async def get_db():
-        async with AsyncSessionLocal() as session:
-            yield session
+    from fastapi import Request
+    
+    async def get_db(request: Request = None):
+        # If middleware set a session with search_path, use it
+        if request and hasattr(request.state, 'db'):
+            yield request.state.db
+        else:
+            # Fallback to creating new session (without tenant schema)
+            async with AsyncSessionLocal() as session:
+                yield session
 
 
 # ==================== Dead-Letter Queue ====================
