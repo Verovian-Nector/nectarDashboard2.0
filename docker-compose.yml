@@ -29,6 +29,7 @@ services:
       - DB_USER=${DB_USER:-postgres}
       - DB_PASS=${DB_PASS:-postgres}
       - PARENT_URL=http://parent:8000
+      - PARENT_SERVICE_URL=http://parent:8000
       - SUBDOMAIN=child
       - API_URL=http://child:8000
       - DATABASE_URL=postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASS:-postgres}@db:5432/parent_db
