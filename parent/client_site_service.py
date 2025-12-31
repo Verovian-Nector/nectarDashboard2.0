@@ -163,25 +163,87 @@ class ClientSiteProvisioningService:
             raise
     
     async def _create_client_site_schema(self, subdomain: str) -> str:
-        """Create client site-specific database schema"""
+        """Create client site-specific database schema and tables directly via SQL"""
+        import uuid
+        
         try:
             # Check if we're using SQLite
             is_sqlite = str(self.db.bind.url).startswith("sqlite")
             
             if is_sqlite:
-                import uuid
                 client_site_id = str(uuid.uuid4())
                 logger.info(f"Skipping schema creation for client site '{subdomain}' (SQLite environment)")
                 return client_site_id
 
-            # Execute database function to create client site schema
-            result = self.db.execute(
-                text("SELECT create_client_site_schema(:subdomain)"),
-                {"subdomain": subdomain}
-            )
-            client_site_id = result.scalar()
+            # Generate client site ID
+            client_site_id = str(uuid.uuid4())
+            schema_name = f"client_site_{subdomain}"
             
-            logger.info(f"Created database schema for client site '{subdomain}' with ID {client_site_id}")
+            logger.info(f"Creating schema and tables for client site '{subdomain}' directly via SQL")
+            
+            # Create the schema
+            self.db.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"'))
+            
+            # Create users table in the new schema
+            self.db.execute(text(f'''
+                CREATE TABLE IF NOT EXISTS "{schema_name}".users (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    email VARCHAR(255) NOT NULL,
+                    username VARCHAR(63) NOT NULL UNIQUE,
+                    hashed_password VARCHAR(255) NOT NULL,
+                    full_name VARCHAR(255),
+                    role VARCHAR(50) DEFAULT 'user',
+                    is_active BOOLEAN DEFAULT true,
+                    client_site_id VARCHAR(255),
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    last_login TIMESTAMP WITH TIME ZONE,
+                    permissions JSONB DEFAULT '{{}}'::jsonb
+                )
+            '''))
+            
+            # Create clients table in the new schema
+            self.db.execute(text(f'''
+                CREATE TABLE IF NOT EXISTS "{schema_name}".clients (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    name VARCHAR(255) NOT NULL,
+                    email VARCHAR(255),
+                    phone VARCHAR(50),
+                    address TEXT,
+                    company VARCHAR(255),
+                    status VARCHAR(20) DEFAULT 'active',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    metadata JSONB DEFAULT '{{}}'::jsonb
+                )
+            '''))
+            
+            # Create properties table in the new schema
+            self.db.execute(text(f'''
+                CREATE TABLE IF NOT EXISTS "{schema_name}".properties (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    title VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    address TEXT NOT NULL,
+                    price DECIMAL(15,2),
+                    property_type VARCHAR(50),
+                    bedrooms INTEGER,
+                    bathrooms INTEGER,
+                    square_feet INTEGER,
+                    status VARCHAR(20) DEFAULT 'available',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    metadata JSONB DEFAULT '{{}}'::jsonb
+                )
+            '''))
+            
+            # Grant permissions
+            self.db.execute(text(f'GRANT ALL ON SCHEMA "{schema_name}" TO postgres'))
+            self.db.execute(text(f'GRANT ALL ON ALL TABLES IN SCHEMA "{schema_name}" TO postgres'))
+            
+            self.db.commit()
+            
+            logger.info(f"Created database schema and tables for client site '{subdomain}' with ID {client_site_id}")
             return client_site_id
             
         except Exception as e:
