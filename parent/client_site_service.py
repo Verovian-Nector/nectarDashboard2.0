@@ -189,56 +189,57 @@ class ClientSiteProvisioningService:
             raise
 
     async def _seed_admin_user(self, subdomain: str, client_site_id: str) -> None:
-        """Seed admin user in client site's backend"""
+        """Seed admin user directly in client site's PostgreSQL schema"""
         try:
-            admin_username = f"admin_{subdomain}"  # Make username unique per client site
+            import bcrypt
+            import uuid
+            
+            admin_username = f"admin_{subdomain}"
             admin_password = f"{subdomain}123"
+            admin_email = f"admin@{subdomain}.localhost"
             
-            # For local development, use the child backend directly
-            # The child backend runs on port 8002 and handles tenant-specific data
-            child_backend_url = "http://localhost:8002"
+            # Hash password using bcrypt directly
+            hashed_password = bcrypt.hashpw(
+                admin_password.encode('utf-8'),
+                bcrypt.gensalt()
+            ).decode('utf-8')
             
-            logger.info(f"Attempting to seed admin user for client site '{subdomain}' at {child_backend_url}")
+            logger.info(f"Seeding admin user for client site '{subdomain}' directly in PostgreSQL schema")
             
-            # Try to create admin user in child backend
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                # First, check if the child backend is accessible
-                health_response = await client.get(f"{child_backend_url}/health")
-                
-                if health_response.status_code == 200:
-                    logger.info(f"Child backend is accessible, creating admin user for '{subdomain}'")
-                    
-                    # Create admin user in child backend with client site context
-                    create_user_response = await client.post(
-                        f"{child_backend_url}/api/admin/users",
-                        json={
-                            "username": admin_username,
-                            "email": f"admin@{subdomain}.localhost",
-                            "password": admin_password,
-                            "full_name": "Administrator",
-                            "role": "propertyadmin",  # Use the role expected by child frontend
-                            "is_active": True,
-                            "client_site_id": str(client_site_id),
-                            "subdomain": subdomain
-                        },
-                        headers={
-                            "X-Internal-Service": "parent-service",
-                            "X-Client-Site-ID": subdomain,  # Pass client site context
-                            "X-Client-Site-UUID": client_site_id
-                        }
-                    )
-                    
-                    if create_user_response.status_code in [200, 201]:
-                        logger.info(f"Successfully seeded admin user for client site '{subdomain}' with username '{admin_username}' and password '{admin_password}'")
-                    else:
-                        logger.warning(f"Failed to create admin user in child backend for '{subdomain}': {create_user_response.status_code} - {create_user_response.text}")
-                else:
-                    logger.warning(f"Child backend is not accessible at {child_backend_url}, skipping admin user seeding")
+            # Check if we're using SQLite
+            is_sqlite = str(self.db.bind.url).startswith("sqlite")
             
-        except httpx.TimeoutException:
-            logger.warning(f"Timeout while trying to seed admin user for client site '{subdomain}' - child backend may not be ready yet")
-        except httpx.ConnectError as e:
-            logger.warning(f"Could not connect to child backend for '{subdomain}': {str(e)} - child backend may not be ready yet")
+            if is_sqlite:
+                logger.info(f"Skipping admin user seeding for '{subdomain}' (SQLite environment)")
+                return
+            
+            # Generate UUID for the user
+            user_id = str(uuid.uuid4())
+            
+            # Insert admin user directly into the client site schema
+            insert_sql = text(f"""
+                INSERT INTO client_site_{subdomain}.users 
+                (id, email, username, hashed_password, full_name, role, is_active, client_site_id, permissions)
+                VALUES (:id, :email, :username, :hashed_password, :full_name, :role, :is_active, :client_site_id, :permissions)
+                ON CONFLICT (username) DO NOTHING
+            """)
+            
+            self.db.execute(insert_sql, {
+                "id": user_id,
+                "email": admin_email,
+                "username": admin_username,
+                "hashed_password": hashed_password,
+                "full_name": "Administrator",
+                "role": "propertyadmin",
+                "is_active": True,
+                "client_site_id": str(client_site_id),
+                "permissions": "{}"
+            })
+            
+            self.db.commit()
+            
+            logger.info(f"Successfully seeded admin user for client site '{subdomain}' with username '{admin_username}' and password '{admin_password}'")
+            
         except Exception as e:
             logger.error(f"Failed to seed admin user for client site '{subdomain}': {str(e)}")
             # Don't fail the entire provisioning if admin user seeding fails
